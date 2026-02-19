@@ -1,0 +1,43 @@
+version: '3.8'
+
+services:
+  oauth-server:
+    build: .
+    ports:
+      - "8080:8080"
+    environment:
+      - driverName=mysql
+      - dataSourceName=root:password@tcp(mysql:3306)/oauth_server?charset=utf8mb4&parseTime=True&loc=Local
+      - jwtSecret=your-secret-key-change-in-production-min-32-chars
+      - origin=http://localhost:8080
+      - redisAddr=redis:6379
+      - redisPassword=
+      - redisDB=0
+    depends_on:
+      - mysql
+      - redis
+    restart: unless-stopped
+
+  mysql:
+    image: mysql:8.0
+    environment:
+      - MYSQL_ROOT_PASSWORD=password
+      - MYSQL_DATABASE=oauth_server
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    restart: unless-stopped
+
+  redis:
+    image: redis:7-alpine
+    command: redis-server --appendonly yes
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    restart: unless-stopped
+
+volumes:
+  mysql_data:
+  redis_data:

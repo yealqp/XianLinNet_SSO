@@ -1,0 +1,38 @@
+# Application Configuration
+appname = oauth-server
+httpport = 8080
+runmode = dev
+
+# Database Configuration
+# SQLite (default)
+driverName = sqlite
+dataSourceName = ./oauth_server.db
+
+# MySQL
+# driverName = mysql
+# dataSourceName = root:password@tcp(localhost:3306)/oauth_server?charset=utf8mb4&parseTime=True&loc=Local
+
+# PostgreSQL
+# driverName = postgres
+# dataSourceName = host=localhost port=5432 user=postgres password=password dbname=oauth_server sslmode=disable
+
+# JWT Configuration
+jwtSecret = your-secret-key-change-in-production-min-32-chars
+
+# Redis Configuration (optional)
+redisAddr = localhost:6379
+redisPassword = 
+redisDB = 0
+
+# Origin Configuration
+origin = http://localhost:8080
+originFrontend = http://localhost:8080
+
+# Session Configuration
+sessionon = true
+sessionprovider = memory
+sessionname = oauth_session
+sessiongcmaxlifetime = 3600
+
+# CORS Configuration
+EnableCORS = true
