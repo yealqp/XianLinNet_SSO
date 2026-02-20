@@ -2,6 +2,7 @@
 appname = oauth-server
 httpport = 8080
 runmode = dev
+copyrequestbody = true
 
 # Database Configuration
 # SQLite (default)
@@ -37,24 +38,29 @@ sessiongcmaxlifetime = 3600
 # CORS Configuration
 EnableCORS = true
 
-# SMTP Email Configuration (optional, but required for email verification)
+# SMTP Email Configuration
 smtpEnabled = true
-smtpHost = smtp.example.com
+smtpHost = 
 smtpPort = 465
 smtpUseSSL = true
-smtpUser = noreply@example.com
-smtpPassword = your-smtp-password
-smtpFrom = noreply@example.com
-smtpFromName = Your App Name
+smtpUser = 
+smtpPassword = 
+smtpFrom = 
+smtpFromName = XianlinNet ID
 
 # Default Admin Configuration (REQUIRED if no admin exists)
-# These settings are used to create the initial admin user when the database is empty
+# These settings are used to create the initial admin user
 # All three fields are REQUIRED - the application will fail to start if not configured
-# IMPORTANT: Change these values before first run!
-adminEmail = admin@example.com
-adminPassword = ChangeMe123456!
-adminUsername = Administrator
+adminEmail = 
+adminPassword = 
+adminUsername = 
 
-# Real Name Verification API Configuration (optional)
-verifyApiUrl = http://localhost:3000
-verifyApiEnabled = false
+# Real Name Verification API Configuration
+verifyApiUrl = 
+verifyApiEnabled = true
+
+# Captcha Configuration (Cap.js)
+captchaEnabled = true
+captchaInstanceUrl = 
+captchaSiteKey = 
+captchaSecret = 

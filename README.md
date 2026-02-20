@@ -1,315 +1,351 @@
-# OAuth 2.1 Server
+# OAuth Server
 
-一个从Casdoor提取的独立OAuth 2.1认证服务器，支持完整的OAuth2/OIDC协议。
-
-## ✅ 安全状态更新 (2024-02-19)
-
-**重要安全修复已完成！**
-
-本项目已完成OAuth 2.1合规性审查并修复了所有严重安全问题：
-
-✅ **已修复的严重问题**:
-- ✅ 密码验证已实现（支持bcrypt、SHA256+salt）
-- ✅ 令牌撤销已完整实现（RFC 7009）
-- ✅ PKCE强制要求（公共客户端必须使用）
-- ✅ 重定向URI验证已加强（精确匹配优先）
-- ✅ State参数强制要求（CSRF防护）
-- ✅ 刷新令牌重用检测（令牌家族撤销）
-
-**合规性评分**: 从 55/100 提升至 85/100 ⬆️ +30
-
-详细信息请查看:
-- [OAuth 2.1 合规性报告](OAUTH_COMPLIANCE_REPORT.md)
-- [合规性修复详情](COMPLIANCE_FIXES.md)
-- [安全修复计划](SECURITY_FIXES.md)
-
-⚠️ **剩余工作**:
-- 用户同意页面（需要UI实现）
-- Client Secret哈希存储
-- HTTP Basic Auth客户端认证
+[English](#english) | [中文](#中文)
 
 ---
 
-## 功能特性
+## English
 
-### OAuth 2.1 核心功能
-- ✅ Authorization Code Flow (授权码模式)
-- ✅ PKCE Support (RFC 7636) - 公共客户端强制要求
-- ✅ Client Credentials Flow (客户端凭证模式)
-- ✅ Password Flow (密码模式) - 带密码验证
-- ✅ Refresh Token (刷新令牌) - 带重用检测
-- ✅ Token Revocation (令牌撤销) - RFC 7009
-- ✅ Token Exchange (RFC 8693)
-- ✅ Device Authorization Flow (设备授权)
-- ✅ Resource Indicators (RFC 8707)
+A full-featured OAuth 2.0 / OpenID Connect server built with Go (Beego) and Vue 3, supporting user authentication, authorization, role-based access control (RBAC), and real-name verification.
 
-### OIDC 支持
-- ✅ OpenID Connect Discovery
-- ✅ UserInfo Endpoint
-- ✅ JWKS Endpoint
-- ✅ ID Token
+### Features
 
-### 高级功能
-- ✅ Dynamic Client Registration (RFC 7591)
-- ✅ Token Introspection
-- ✅ Multiple IdP Integration (30+ providers)
-- ✅ JWT Token Format
-- ✅ Custom Scopes
-- ✅ Multi-tenancy Support
-- ✅ Redis Cache Support
-- ✅ Admin Management API
-- ✅ Role-Based Access Control (RBAC)
-- ✅ Multi-User Support
-- ✅ Fine-Grained Permissions
+- 🔐 OAuth 2.0 & OpenID Connect support
+- 👥 User management with role-based access control (RBAC)
+- 🎫 Token management and validation
+- 📧 Email verification and password reset
+- 🔑 JWT-based authentication
+- 🎨 Modern Vue 3 + Ant Design Vue frontend
+- 💾 Multiple database support (SQLite, MySQL, PostgreSQL)
+- 🚀 Redis caching support (optional)
+- 🔒 RSA encryption for sensitive data
+- 🌐 CORS support for cross-origin requests
+- 📱 Real-name verification API integration (optional)
 
-## 快速开始
+### Tech Stack
 
-### 环境要求
+**Backend:**
 - Go 1.23+
-- MySQL/PostgreSQL/SQLite
-- Redis (可选，用于缓存)
+- Beego v2 web framework
+- XORM for database operations
+- JWT for token management
+- Redis for caching (optional)
 
-### 平台支持
-- ✅ Linux
-- ✅ macOS
-- ✅ Windows (查看 [Windows 使用指南](WINDOWS.md))
+**Frontend:**
+- Vue 3 with TypeScript
+- Ant Design Vue 4
+- Vite build tool
+- Pinia for state management
+- Vue Router for routing
 
-### 安装
+### Prerequisites
 
-#### Linux/macOS
+- Go 1.23 or higher
+- Node.js 18+ and pnpm
+- SQLite (default) or MySQL/PostgreSQL (optional)
+- Redis (optional, for caching)
+
+### Quick Start
+
+#### 1. Clone the repository
 
 ```bash
-# 克隆项目
-git clone <repository>
+git clone <repository-url>
 cd oauth-server
+```
 
-# 安装依赖
-make install
+#### 2. Backend Setup
 
-# 或使用 go 命令
+```bash
+# Install Go dependencies
 go mod download
 
-# 配置数据库
-cp conf/app.conf.example conf/app.conf
-# 编辑 conf/app.conf 配置数据库连接
+# Copy configuration file
+copy conf\app.conf.example conf\app.conf
 
-# 初始化数据库
-make init
+# Edit conf/app.conf and configure:
+# - Database settings
+# - JWT secret (minimum 32 characters)
+# - Admin credentials (REQUIRED for first run)
+# - SMTP settings (if email verification needed)
+# - Redis settings (optional)
 
-# 启动服务
-make dev
+# Initialize database and create admin user
+go run main.go init
+
+# Start the backend server
+go run main.go
 ```
 
-#### Windows
+The backend server will start on `http://localhost:8080` (or your configured port).
 
-```powershell
-# 克隆项目
-git clone <repository>
+#### 3. Frontend Setup
+
+```bash
+cd frontend
+
+# Install dependencies
+pnpm install
+
+# Start development server
+pnpm dev
+```
+
+The frontend will start on `http://localhost:5173`.
+
+For production build:
+
+```bash
+pnpm build
+```
+
+### Configuration
+
+Edit `conf/app.conf` to configure:
+
+**Required Settings:**
+- `adminEmail`, `adminPassword`, `adminUsername` - Initial admin user credentials
+- `jwtSecret` - JWT signing key (minimum 32 characters)
+
+**Database Options:**
+- SQLite (default): `driverName = sqlite`, `dataSourceName = ./oauth_server.db`
+- MySQL: `driverName = mysql`, `dataSourceName = user:pass@tcp(host:3306)/dbname?charset=utf8mb4&parseTime=True`
+- PostgreSQL: `driverName = postgres`, `dataSourceName = host=localhost port=5432 user=postgres password=pass dbname=oauth_server`
+
+**Optional Settings:**
+- Redis cache configuration
+- SMTP email settings
+- CORS and origin settings
+- Real-name verification API
+
+### Project Structure
+
+```
+.
+├── conf/              # Configuration files
+├── controllers/       # HTTP request handlers
+├── models/           # Database models and operations
+├── services/         # Business logic layer
+├── routers/          # Route definitions
+├── keys/             # RSA key pairs for encryption
+├── frontend/         # Vue 3 frontend application
+│   ├── src/
+│   │   ├── api/      # API client
+│   │   ├── components/  # Vue components
+│   │   ├── views/    # Page views
+│   │   ├── router/   # Route configuration
+│   │   └── stores/   # Pinia stores
+│   └── dist/         # Production build output
+└── main.go           # Application entry point
+```
+
+### API Endpoints
+
+- `POST /api/auth/login` - User login
+- `POST /api/auth/register` - User registration
+- `POST /api/auth/logout` - User logout
+- `GET /api/auth/authorize` - OAuth authorization endpoint
+- `POST /api/auth/token` - OAuth token endpoint
+- `GET /api/admin/*` - Admin management endpoints
+- `GET /api/user/*` - User profile endpoints
+
+### Default Admin Account
+
+After running `go run main.go init`, an admin account will be created using the credentials from `conf/app.conf`:
+
+- Email: As configured in `adminEmail`
+- Password: As configured in `adminPassword`
+- Username: As configured in `adminUsername`
+
+**Important:** Change these default credentials immediately after first login!
+
+### Development
+
+```bash
+# Run backend with hot reload (requires air or similar tool)
+go run main.go
+
+# Run frontend development server
+cd frontend && pnpm dev
+
+# Build frontend for production
+cd frontend && pnpm build
+```
+
+### License
+
+Apache License 2.0
+
+---
+
+## 中文
+
+一个功能完整的 OAuth 2.0 / OpenID Connect 服务器，使用 Go (Beego) 和 Vue 3 构建，支持用户认证、授权、基于角色的访问控制 (RBAC) 和实名验证。
+
+### 功能特性
+
+- 🔐 支持 OAuth 2.0 和 OpenID Connect
+- 👥 用户管理与基于角色的访问控制 (RBAC)
+- 🎫 令牌管理和验证
+- 📧 邮箱验证和密码重置
+- 🔑 基于 JWT 的身份认证
+- 🎨 现代化的 Vue 3 + Ant Design Vue 前端
+- 💾 支持多种数据库（SQLite、MySQL、PostgreSQL）
+- 🚀 Redis 缓存支持（可选）
+- 🔒 敏感数据 RSA 加密
+- 🌐 支持跨域请求 (CORS)
+- 📱 实名验证 API 集成（可选）
+
+### 技术栈
+
+**后端：**
+- Go 1.23+
+- Beego v2 Web 框架
+- XORM 数据库操作
+- JWT 令牌管理
+- Redis 缓存（可选）
+
+**前端：**
+- Vue 3 + TypeScript
+- Ant Design Vue 4
+- Vite 构建工具
+- Pinia 状态管理
+- Vue Router 路由管理
+
+### 环境要求
+
+- Go 1.23 或更高版本
+- Node.js 18+ 和 pnpm
+- SQLite（默认）或 MySQL/PostgreSQL（可选）
+- Redis（可选，用于缓存）
+
+### 快速开始
+
+#### 1. 克隆仓库
+
+```bash
+git clone <repository-url>
 cd oauth-server
+```
+
+#### 2. 后端设置
+
+```bash
+# 安装 Go 依赖
+go mod download
+
+# 复制配置文件
+copy conf\app.conf.example conf\app.conf
+
+# 编辑 conf/app.conf 并配置：
+# - 数据库设置
+# - JWT 密钥（至少 32 个字符）
+# - 管理员凭据（首次运行必需）
+# - SMTP 设置（如需邮箱验证）
+# - Redis 设置（可选）
+
+# 初始化数据库并创建管理员用户
+go run main.go init
+
+# 启动后端服务器
+go run main.go
+```
+
+后端服务器将在 `http://localhost:8080`（或您配置的端口）启动。
+
+#### 3. 前端设置
+
+```bash
+cd frontend
 
 # 安装依赖
-.\build.ps1 install
+pnpm install
 
-# 配置数据库
-copy conf\app.conf.example conf\app.conf
-# 编辑 conf\app.conf 配置数据库连接
-
-# 初始化数据库
-.\build.ps1 init
-
-# 启动服务
-.\build.ps1 dev
+# 启动开发服务器
+pnpm dev
 ```
 
-详细的 Windows 使用说明请查看 [WINDOWS.md](WINDOWS.md)
-```
+前端将在 `http://localhost:5173` 启动。
 
-### 配置文件
-
-编辑 `conf/app.conf`:
-
-```ini
-appname = oauth-server
-httpport = 8080
-runmode = dev
-
-# 数据库配置
-driverName = mysql
-dataSourceName = root:password@tcp(localhost:3306)/oauth_server?charset=utf8mb4
-
-# JWT密钥
-jwtSecret = your-secret-key-here
-
-# Origin配置
-origin = http://localhost:8080
-```
-
-## API 端点
-
-### OAuth 2.0 端点
-
-```
-# 授权端点
-GET  /oauth/authorize
-
-# 令牌端点
-POST /api/oauth/token
-
-# 令牌撤销
-POST /api/oauth/revoke
-
-# 令牌内省
-POST /api/oauth/introspect
-
-# 设备授权
-POST /api/oauth/device/authorize
-POST /api/oauth/device/token
-```
-
-### OIDC 端点
-
-```
-# Discovery
-GET /.well-known/openid-configuration
-
-# JWKS
-GET /.well-known/jwks
-
-# UserInfo
-GET /api/userinfo
-
-# 动态客户端注册
-POST /api/oauth/register
-```
-
-## 使用示例
-
-### 1. 授权码模式
+生产环境构建：
 
 ```bash
-# 步骤1: 获取授权码
-curl "http://localhost:8080/oauth/authorize?\
-client_id=YOUR_CLIENT_ID&\
-response_type=code&\
-redirect_uri=http://localhost:3000/callback&\
-scope=openid profile email&\
-state=random_state"
-
-# 步骤2: 用授权码换取令牌
-curl -X POST http://localhost:8080/api/oauth/token \
-  -H "Content-Type: application/x-www-form-urlencoded" \
-  -d "grant_type=authorization_code" \
-  -d "code=AUTHORIZATION_CODE" \
-  -d "client_id=YOUR_CLIENT_ID" \
-  -d "client_secret=YOUR_CLIENT_SECRET" \
-  -d "redirect_uri=http://localhost:3000/callback"
+pnpm build
 ```
 
-### 2. 客户端凭证模式
+### 配置说明
+
+编辑 `conf/app.conf` 进行配置：
+
+**必需设置：**
+- `adminEmail`、`adminPassword`、`adminUsername` - 初始管理员用户凭据
+- `jwtSecret` - JWT 签名密钥（至少 32 个字符）
+
+**数据库选项：**
+- SQLite（默认）：`driverName = sqlite`，`dataSourceName = ./oauth_server.db`
+- MySQL：`driverName = mysql`，`dataSourceName = user:pass@tcp(host:3306)/dbname?charset=utf8mb4&parseTime=True`
+- PostgreSQL：`driverName = postgres`，`dataSourceName = host=localhost port=5432 user=postgres password=pass dbname=oauth_server`
+
+**可选设置：**
+- Redis 缓存配置
+- SMTP 邮件设置
+- CORS 和源站设置
+- 实名验证 API
+
+### 项目结构
+
+```
+.
+├── conf/              # 配置文件
+├── controllers/       # HTTP 请求处理器
+├── models/           # 数据库模型和操作
+├── services/         # 业务逻辑层
+├── routers/          # 路由定义
+├── keys/             # RSA 密钥对（用于加密）
+├── frontend/         # Vue 3 前端应用
+│   ├── src/
+│   │   ├── api/      # API 客户端
+│   │   ├── components/  # Vue 组件
+│   │   ├── views/    # 页面视图
+│   │   ├── router/   # 路由配置
+│   │   └── stores/   # Pinia 状态存储
+│   └── dist/         # 生产构建输出
+└── main.go           # 应用程序入口
+```
+
+### API 端点
+
+- `POST /api/auth/login` - 用户登录
+- `POST /api/auth/register` - 用户注册
+- `POST /api/auth/logout` - 用户登出
+- `GET /api/auth/authorize` - OAuth 授权端点
+- `POST /api/auth/token` - OAuth 令牌端点
+- `GET /api/admin/*` - 管理员管理端点
+- `GET /api/user/*` - 用户资料端点
+
+### 默认管理员账户
+
+运行 `go run main.go init` 后，将使用 `conf/app.conf` 中的凭据创建管理员账户：
+
+- 邮箱：在 `adminEmail` 中配置
+- 密码：在 `adminPassword` 中配置
+- 用户名：在 `adminUsername` 中配置
+
+**重要提示：** 首次登录后请立即更改这些默认凭据！
+
+### 开发
 
 ```bash
-curl -X POST http://localhost:8080/api/oauth/token \
-  -H "Content-Type: application/x-www-form-urlencoded" \
-  -d "grant_type=client_credentials" \
-  -d "client_id=YOUR_CLIENT_ID" \
-  -d "client_secret=YOUR_CLIENT_SECRET" \
-  -d "scope=read write"
+# 运行后端（需要 air 或类似工具实现热重载）
+go run main.go
+
+# 运行前端开发服务器
+cd frontend && pnpm dev
+
+# 构建生产环境前端
+cd frontend && pnpm build
 ```
 
-### 3. 刷新令牌
+### 许可证
 
-```bash
-curl -X POST http://localhost:8080/api/oauth/token \
-  -H "Content-Type: application/x-www-form-urlencoded" \
-  -d "grant_type=refresh_token" \
-  -d "refresh_token=YOUR_REFRESH_TOKEN" \
-  -d "client_id=YOUR_CLIENT_ID" \
-  -d "client_secret=YOUR_CLIENT_SECRET"
-```
-
-### 4. 动态客户端注册
-
-```bash
-curl -X POST http://localhost:8080/api/oauth/register \
-  -H "Content-Type: application/json" \
-  -d '{
-    "client_name": "My Application",
-    "redirect_uris": ["http://localhost:3000/callback"],
-    "grant_types": ["authorization_code", "refresh_token"],
-    "response_types": ["code"],
-    "scope": "openid profile email"
-  }'
-```
-
-## 项目结构
-
-```
-oauth-server/
-├── main.go                 # 入口文件
-├── conf/
-│   └── app.conf           # 配置文件
-├── controllers/           # 控制器层
-│   ├── auth.go           # 认证控制器
-│   ├── token.go          # 令牌控制器
-│   └── oidc.go           # OIDC控制器
-├── models/               # 数据模型
-│   ├── user.go
-│   ├── application.go
-│   ├── token.go
-│   └── organization.go
-├── services/             # 业务逻辑
-│   ├── oauth.go         # OAuth服务
-│   ├── jwt.go           # JWT服务
-│   └── idp/             # IdP集成
-├── middleware/           # 中间件
-│   └── auth.go
-├── util/                # 工具函数
-└── routers/             # 路由配置
-```
-
-## 数据库表结构
-
-主要表：
-- `users` - 用户表
-- `applications` - 应用（客户端）表
-- `tokens` - 令牌表
-- `organizations` - 组织表
-- `providers` - IdP提供商表
-
-## 安全特性
-
-- PKCE支持防止授权码拦截
-- 授权码5分钟过期
-- 防重放攻击（授权码只能使用一次）
-- 客户端密钥验证
-- Scope验证
-- Token哈希存储
-
-## 第三方IdP集成
-
-支持30+种OAuth提供商：
-- GitHub, Google, Facebook
-- WeChat, DingTalk, Weibo
-- Azure AD, Okta, Auth0
-- 自定义OAuth提供商
-
-## 开发
-
-```bash
-# 运行测试
-go test ./...
-
-# 构建
-go build -o oauth-server main.go
-
-# 运行
-./oauth-server
-```
-
-## License
-
-Apache-2.0
-
-## 致谢
-
-本项目基于 [Casdoor](https://github.com/casdoor/casdoor) 的OAuth实现提取而来。
+Apache License 2.0
