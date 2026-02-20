@@ -7,6 +7,7 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"fmt"
+	"time"
 )
 
 type Token struct {
@@ -23,7 +24,9 @@ type Token struct {
 	RefreshToken     string `xorm:"mediumtext" json:"refreshToken"`
 	AccessTokenHash  string `xorm:"varchar(100) index" json:"accessTokenHash"`
 	RefreshTokenHash string `xorm:"varchar(100) index" json:"refreshTokenHash"`
-	ExpiresIn        int    `json:"expiresIn"`
+	ExpiresIn        int    `json:"expiresIn"`        // Token有效期长度（秒）
+	ExpiresAt        int64  `json:"expiresAt"`        // Access Token过期时间戳
+	RefreshExpiresAt int64  `json:"refreshExpiresAt"` // Refresh Token过期时间戳
 	Scope            string `xorm:"varchar(100)" json:"scope"`
 	TokenType        string `xorm:"varchar(100)" json:"tokenType"`
 	CodeChallenge    string `xorm:"varchar(100)" json:"codeChallenge"`
@@ -172,4 +175,25 @@ func RevokeTokenFamily(tokenFamily string) error {
 
 	_, err := engine.Where("token_family = ?", tokenFamily).Cols("expires_in").Update(&Token{ExpiresIn: 0})
 	return err
+}
+
+// IsAccessTokenExpired checks if the access token is expired
+func (t *Token) IsAccessTokenExpired() bool {
+	if t.ExpiresAt == 0 {
+		return false // No expiration set
+	}
+	return time.Now().Unix() > t.ExpiresAt
+}
+
+// IsRefreshTokenExpired checks if the refresh token is expired
+func (t *Token) IsRefreshTokenExpired() bool {
+	if t.RefreshExpiresAt == 0 {
+		return false // No expiration set
+	}
+	return time.Now().Unix() > t.RefreshExpiresAt
+}
+
+// IsRevoked checks if the token has been revoked
+func (t *Token) IsRevoked() bool {
+	return t.ExpiresIn <= 0
 }

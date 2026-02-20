@@ -20,6 +20,24 @@ func main() {
 		panic(fmt.Sprintf("Failed to initialize database: %v", err))
 	}
 
+	// Auto-sync tables on startup
+	err = models.InitTables()
+	if err != nil {
+		fmt.Printf("Warning: Failed to sync tables: %v\n", err)
+	}
+
+	// Auto-initialize data if needed (creates admin if none exists)
+	err = models.InitData()
+	if err != nil {
+		fmt.Printf("Warning: Failed to initialize data: %v\n", err)
+	}
+
+	// Initialize RSA keys for encryption
+	err = services.InitRSAKeys()
+	if err != nil {
+		panic(fmt.Sprintf("Failed to initialize RSA keys: %v", err))
+	}
+
 	// Initialize Redis (optional)
 	err = services.InitRedis()
 	if err != nil {
@@ -31,18 +49,7 @@ func main() {
 
 	// Check if init command
 	if len(os.Args) > 1 && os.Args[1] == "init" {
-		fmt.Println("Initializing database...")
-		err = models.InitTables()
-		if err != nil {
-			panic(fmt.Sprintf("Failed to initialize tables: %v", err))
-		}
-
-		err = models.InitData()
-		if err != nil {
-			panic(fmt.Sprintf("Failed to initialize data: %v", err))
-		}
-
-		fmt.Println("Database initialized successfully!")
+		fmt.Println("Database initialization completed!")
 		return
 	}
 

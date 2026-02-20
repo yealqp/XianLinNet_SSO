@@ -8,10 +8,12 @@ import (
 	"encoding/base64"
 	"fmt"
 	"net/url"
+	"strconv"
 	"strings"
 	"time"
 
 	"github.com/oauth-server/oauth-server/models"
+	"golang.org/x/crypto/bcrypt"
 )
 
 const (
@@ -102,7 +104,16 @@ func CheckOAuthLogin(clientId, responseType, redirectUri, scope, state string) (
 
 // GetOAuthCode generates OAuth authorization code
 func GetOAuthCode(userId, clientId, responseType, redirectUri, scope, state, nonce, challenge, resource string) (*CodeResponse, error) {
-	user, err := models.GetUser("built-in", userId)
+	// Parse userId to int64
+	userIdInt, err := strconv.ParseInt(userId, 10, 64)
+	if err != nil {
+		return &CodeResponse{
+			Message: fmt.Sprintf("Invalid user ID: %s", userId),
+			Code:    "",
+		}, nil
+	}
+
+	user, err := models.GetUserById(userIdInt)
 	if err != nil {
 		return nil, err
 	}
@@ -151,24 +162,35 @@ func GetOAuthCode(userId, clientId, responseType, redirectUri, scope, state, non
 		challenge = ""
 	}
 
+	// Generate token family ID for refresh token rotation tracking
+	tokenFamily := models.GenerateRandomString(32)
+
+	// Calculate expiration timestamps
+	now := time.Now()
+	accessExpiresAt := now.Add(time.Duration(application.ExpireInHours) * time.Hour).Unix()
+	refreshExpiresAt := now.Add(time.Duration(application.RefreshExpireInHours) * time.Hour).Unix()
+
 	// Create token record
 	token := &models.Token{
-		Owner:         application.Owner,
-		Name:          tokenName,
-		CreatedTime:   models.GetCurrentTime(),
-		Application:   application.Name,
-		Organization:  user.Owner,
-		User:          user.Name,
-		Code:          models.GenerateRandomString(32),
-		AccessToken:   accessToken,
-		RefreshToken:  refreshToken,
-		ExpiresIn:     int(application.ExpireInHours * 3600),
-		Scope:         scope,
-		TokenType:     "Bearer",
-		CodeChallenge: challenge,
-		CodeIsUsed:    false,
-		CodeExpireIn:  time.Now().Add(time.Minute * 5).Unix(),
-		Resource:      resource,
+		Owner:            application.Owner,
+		Name:             tokenName,
+		CreatedTime:      models.GetCurrentTime(),
+		Application:      application.Name,
+		Organization:     user.Owner,
+		User:             fmt.Sprintf("%d", user.Id),
+		Code:             models.GenerateRandomString(32),
+		AccessToken:      accessToken,
+		RefreshToken:     refreshToken,
+		ExpiresIn:        int(application.ExpireInHours * 3600),
+		ExpiresAt:        accessExpiresAt,
+		RefreshExpiresAt: refreshExpiresAt,
+		Scope:            scope,
+		TokenType:        "Bearer",
+		CodeChallenge:    challenge,
+		CodeIsUsed:       false,
+		CodeExpireIn:     time.Now().Add(time.Minute * 5).Unix(),
+		Resource:         resource,
+		TokenFamily:      tokenFamily,
 	}
 
 	_, err = models.AddToken(token)
@@ -374,8 +396,9 @@ func GetPasswordToken(application *models.Application, username, password, scope
 		}, nil
 	}
 
-	// Verify password
-	if !verifyPassword(user.Password, password, user.PasswordSalt) {
+	// Verify password (using bcrypt)
+	err = bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(password))
+	if err != nil {
 		return nil, &TokenError{
 			Error:            InvalidGrant,
 			ErrorDescription: "invalid username or password",
@@ -398,20 +421,31 @@ func GetPasswordToken(application *models.Application, username, password, scope
 		}, nil
 	}
 
+	// Generate token family ID for refresh token rotation tracking
+	tokenFamily := models.GenerateRandomString(32)
+
+	// Calculate expiration timestamps
+	now := time.Now()
+	accessExpiresAt := now.Add(time.Duration(application.ExpireInHours) * time.Hour).Unix()
+	refreshExpiresAt := now.Add(time.Duration(application.RefreshExpireInHours) * time.Hour).Unix()
+
 	token := &models.Token{
-		Owner:        application.Owner,
-		Name:         tokenName,
-		CreatedTime:  models.GetCurrentTime(),
-		Application:  application.Name,
-		Organization: user.Owner,
-		User:         user.Name,
-		Code:         models.GenerateRandomString(32),
-		AccessToken:  accessToken,
-		RefreshToken: refreshToken,
-		ExpiresIn:    int(application.ExpireInHours * 3600),
-		Scope:        scope,
-		TokenType:    "Bearer",
-		CodeIsUsed:   true,
+		Owner:            application.Owner,
+		Name:             tokenName,
+		CreatedTime:      models.GetCurrentTime(),
+		Application:      application.Name,
+		Organization:     user.Owner,
+		User:             fmt.Sprintf("%d", user.Id),
+		Code:             models.GenerateRandomString(32),
+		AccessToken:      accessToken,
+		RefreshToken:     refreshToken,
+		ExpiresIn:        int(application.ExpireInHours * 3600),
+		ExpiresAt:        accessExpiresAt,
+		RefreshExpiresAt: refreshExpiresAt,
+		Scope:            scope,
+		TokenType:        "Bearer",
+		CodeIsUsed:       true,
+		TokenFamily:      tokenFamily,
 	}
 
 	_, err = models.AddToken(token)
@@ -434,8 +468,7 @@ func GetClientCredentialsToken(application *models.Application, clientSecret, sc
 	// Create a null user for client credentials
 	nullUser := &models.User{
 		Owner: application.Owner,
-		Id:    application.GetId(),
-		Name:  application.Name,
+		Id:    0, // Service account - no real user ID
 		Type:  "application",
 	}
 
@@ -447,16 +480,21 @@ func GetClientCredentialsToken(application *models.Application, clientSecret, sc
 		}, nil
 	}
 
+	// Calculate expiration timestamps
+	now := time.Now()
+	accessExpiresAt := now.Add(time.Duration(application.ExpireInHours) * time.Hour).Unix()
+
 	token := &models.Token{
 		Owner:        application.Owner,
 		Name:         tokenName,
 		CreatedTime:  models.GetCurrentTime(),
 		Application:  application.Name,
 		Organization: application.Organization,
-		User:         nullUser.Name,
+		User:         "0", // Service account
 		Code:         models.GenerateRandomString(32),
 		AccessToken:  accessToken,
 		ExpiresIn:    int(application.ExpireInHours * 3600),
+		ExpiresAt:    accessExpiresAt,
 		Scope:        scope,
 		TokenType:    "Bearer",
 		CodeIsUsed:   true,
@@ -500,16 +538,44 @@ func RefreshToken(refreshToken, scope, clientId, clientSecret string) (interface
 		}, nil
 	}
 
-	// Check if token has been invalidated
-	if token.ExpiresIn <= 0 {
+	// Check if token has been revoked
+	if token.IsRevoked() {
+		return &TokenError{
+			Error:            InvalidGrant,
+			ErrorDescription: "refresh token has been revoked",
+		}, nil
+	}
+
+	// Check if refresh token is expired
+	if token.IsRefreshTokenExpired() {
 		return &TokenError{
 			Error:            InvalidGrant,
 			ErrorDescription: "refresh token is expired",
 		}, nil
 	}
 
-	// Get user
-	user, err := models.GetUser(token.Organization, token.User)
+	// OAuth 2.1: Detect refresh token reuse
+	if token.RefreshTokenUsed {
+		// Token reuse detected! Revoke entire token family
+		if token.TokenFamily != "" {
+			models.RevokeTokenFamily(token.TokenFamily)
+		}
+		return &TokenError{
+			Error:            InvalidGrant,
+			ErrorDescription: "refresh token reuse detected - all tokens revoked",
+		}, nil
+	}
+
+	// Get user by ID from token
+	userIdInt, err := strconv.ParseInt(token.User, 10, 64)
+	if err != nil {
+		return &TokenError{
+			Error:            InvalidGrant,
+			ErrorDescription: "invalid user ID in token",
+		}, nil
+	}
+
+	user, err := models.GetUserById(userIdInt)
 	if err != nil {
 		return nil, err
 	}
@@ -533,6 +599,13 @@ func RefreshToken(refreshToken, scope, clientId, clientSecret string) (interface
 		scope = token.Scope
 	}
 
+	// Mark old token as used (before generating new one)
+	token.RefreshTokenUsed = true
+	_, err = models.UpdateToken(token.Owner, token.Name, token)
+	if err != nil {
+		return nil, err
+	}
+
 	// Generate new tokens
 	newAccessToken, newRefreshToken, tokenName, err := GenerateJwtToken(application, user, scope, "", "")
 	if err != nil {
@@ -542,19 +615,27 @@ func RefreshToken(refreshToken, scope, clientId, clientSecret string) (interface
 		}, nil
 	}
 
+	// Calculate expiration timestamps
+	now := time.Now()
+	accessExpiresAt := now.Add(time.Duration(application.ExpireInHours) * time.Hour).Unix()
+	refreshExpiresAt := now.Add(time.Duration(application.RefreshExpireInHours) * time.Hour).Unix()
+
 	newToken := &models.Token{
-		Owner:        application.Owner,
-		Name:         tokenName,
-		CreatedTime:  models.GetCurrentTime(),
-		Application:  application.Name,
-		Organization: user.Owner,
-		User:         user.Name,
-		Code:         models.GenerateRandomString(32),
-		AccessToken:  newAccessToken,
-		RefreshToken: newRefreshToken,
-		ExpiresIn:    int(application.ExpireInHours * 3600),
-		Scope:        scope,
-		TokenType:    "Bearer",
+		Owner:            application.Owner,
+		Name:             tokenName,
+		CreatedTime:      models.GetCurrentTime(),
+		Application:      application.Name,
+		Organization:     user.Owner,
+		User:             fmt.Sprintf("%d", user.Id),
+		Code:             models.GenerateRandomString(32),
+		AccessToken:      newAccessToken,
+		RefreshToken:     newRefreshToken,
+		ExpiresIn:        int(application.ExpireInHours * 3600),
+		ExpiresAt:        accessExpiresAt,
+		RefreshExpiresAt: refreshExpiresAt,
+		Scope:            scope,
+		TokenType:        "Bearer",
+		TokenFamily:      token.TokenFamily, // Preserve token family
 	}
 
 	_, err = models.AddToken(newToken)
@@ -562,11 +643,8 @@ func RefreshToken(refreshToken, scope, clientId, clientSecret string) (interface
 		return nil, err
 	}
 
-	// Delete old token
-	_, err = models.DeleteToken(token.Owner, token.Name)
-	if err != nil {
-		return nil, err
-	}
+	// Clear old token from cache
+	DeleteCachedToken(token.AccessTokenHash)
 
 	return &TokenResponse{
 		AccessToken:  newToken.AccessToken,
@@ -608,36 +686,6 @@ func ValidateScope(requestedScope, existingScope string) (bool, string) {
 	}
 
 	return true, requestedScope
-}
-
-// verifyPassword verifies a password against its hash and salt
-func verifyPassword(hashedPassword, plainPassword, salt string) bool {
-	if plainPassword == "" {
-		return false
-	}
-
-	// If no hash exists, reject (security: don't allow empty passwords)
-	if hashedPassword == "" {
-		return false
-	}
-
-	// For bcrypt hashes (starts with $2a$, $2b$, or $2y$)
-	if len(hashedPassword) >= 4 && hashedPassword[0] == '$' && hashedPassword[3] == '$' {
-		// This is a bcrypt hash - would need golang.org/x/crypto/bcrypt
-		// For now, do a simple comparison (TEMPORARY - should use bcrypt)
-		return hashedPassword == plainPassword
-	}
-
-	// For salted SHA256 (legacy support)
-	if salt != "" {
-		saltedPassword := plainPassword + salt
-		hash := sha256.Sum256([]byte(saltedPassword))
-		computed := fmt.Sprintf("%x", hash)
-		return computed == hashedPassword
-	}
-
-	// Direct comparison (INSECURE - only for testing)
-	return hashedPassword == plainPassword
 }
 
 // verifyPassword verifies a password against its hash and salt

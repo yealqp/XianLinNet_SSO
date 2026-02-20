@@ -36,3 +36,25 @@ sessiongcmaxlifetime = 3600
 
 # CORS Configuration
 EnableCORS = true
+
+# SMTP Email Configuration (optional, but required for email verification)
+smtpEnabled = true
+smtpHost = smtp.example.com
+smtpPort = 465
+smtpUseSSL = true
+smtpUser = noreply@example.com
+smtpPassword = your-smtp-password
+smtpFrom = noreply@example.com
+smtpFromName = Your App Name
+
+# Default Admin Configuration (REQUIRED if no admin exists)
+# These settings are used to create the initial admin user when the database is empty
+# All three fields are REQUIRED - the application will fail to start if not configured
+# IMPORTANT: Change these values before first run!
+adminEmail = admin@example.com
+adminPassword = ChangeMe123456!
+adminUsername = Administrator
+
+# Real Name Verification API Configuration (optional)
+verifyApiUrl = http://localhost:3000
+verifyApiEnabled = false

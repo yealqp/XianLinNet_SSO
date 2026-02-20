@@ -11,9 +11,9 @@ import (
 )
 
 // CheckPermission checks if a user has a specific permission
-func CheckPermission(userOwner, userName, resource, action string) (bool, error) {
+func CheckPermission(userId int64, resource, action string) (bool, error) {
 	// Admin users have all permissions
-	user, err := models.GetUser(userOwner, userName)
+	user, err := models.GetUserById(userId)
 	if err != nil {
 		return false, err
 	}
@@ -25,7 +25,7 @@ func CheckPermission(userOwner, userName, resource, action string) (bool, error)
 	}
 
 	// Get user's permissions through roles
-	perms, err := models.GetUserPermissions(userOwner, userName)
+	perms, err := models.GetUserPermissions(userId)
 	if err != nil {
 		return false, err
 	}
@@ -56,7 +56,7 @@ func CheckPermission(userOwner, userName, resource, action string) (bool, error)
 }
 
 // CheckMultiplePermissions checks if a user has any of the specified permissions
-func CheckMultiplePermissions(userOwner, userName string, permissions []string) (bool, error) {
+func CheckMultiplePermissions(userId int64, permissions []string) (bool, error) {
 	for _, perm := range permissions {
 		parts := strings.Split(perm, ":")
 		if len(parts) != 2 {
@@ -65,7 +65,7 @@ func CheckMultiplePermissions(userOwner, userName string, permissions []string) 
 		resource := parts[0]
 		action := parts[1]
 
-		hasPermission, err := CheckPermission(userOwner, userName, resource, action)
+		hasPermission, err := CheckPermission(userId, resource, action)
 		if err != nil {
 			return false, err
 		}
@@ -77,8 +77,8 @@ func CheckMultiplePermissions(userOwner, userName string, permissions []string) 
 }
 
 // GetUserEffectivePermissions returns all effective permissions for a user
-func GetUserEffectivePermissions(userOwner, userName string) (map[string][]string, error) {
-	perms, err := models.GetUserPermissions(userOwner, userName)
+func GetUserEffectivePermissions(userId int64) (map[string][]string, error) {
+	perms, err := models.GetUserPermissions(userId)
 	if err != nil {
 		return nil, err
 	}
@@ -100,8 +100,8 @@ func GetUserEffectivePermissions(userOwner, userName string) (map[string][]strin
 }
 
 // HasRole checks if a user has a specific role
-func HasRole(userOwner, userName, roleOwner, roleName string) (bool, error) {
-	roles, err := models.GetUserRoles(userOwner, userName)
+func HasRole(userId int64, roleOwner, roleName string) (bool, error) {
+	roles, err := models.GetUserRoles(userId)
 	if err != nil {
 		return false, err
 	}
@@ -116,8 +116,8 @@ func HasRole(userOwner, userName, roleOwner, roleName string) (bool, error) {
 }
 
 // HasAnyRole checks if a user has any of the specified roles
-func HasAnyRole(userOwner, userName string, roleNames []string) (bool, error) {
-	roles, err := models.GetUserRoles(userOwner, userName)
+func HasAnyRole(userId int64, roleNames []string) (bool, error) {
+	roles, err := models.GetUserRoles(userId)
 	if err != nil {
 		return false, err
 	}

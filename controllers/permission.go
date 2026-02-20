@@ -4,6 +4,9 @@
 package controllers
 
 import (
+	"fmt"
+	"strconv"
+
 	"github.com/oauth-server/oauth-server/models"
 	"github.com/oauth-server/oauth-server/services"
 )
@@ -38,7 +41,7 @@ func (c *PermissionController) checkPermission(resource, action string) bool {
 	}
 
 	// Check permission
-	hasPermission, err := services.CheckPermission(user.Owner, user.Name, resource, action)
+	hasPermission, err := services.CheckPermission(user.Id, resource, action)
 	if err != nil {
 		c.Ctx.Output.SetStatus(500)
 		c.ResponseError(err.Error())
@@ -409,7 +412,7 @@ func (c *PermissionController) AddRolePermission() {
 }
 
 // RemoveRolePermission removes a permission from a role
-// @router /api/roles/:owner/:name/permissions/:permOwner/:permName [delete]
+// @router /api/roles/:owner/:name/permissions/remove [post]
 func (c *PermissionController) RemoveRolePermission() {
 	if !c.checkPermission("role", "write") {
 		return
@@ -417,10 +420,19 @@ func (c *PermissionController) RemoveRolePermission() {
 
 	roleOwner := c.GetString(":owner")
 	roleName := c.GetString(":name")
-	permOwner := c.GetString(":permOwner")
-	permName := c.GetString(":permName")
 
-	affected, err := models.RemoveRolePermission(roleOwner, roleName, permOwner, permName)
+	var req struct {
+		PermOwner string `json:"permOwner"`
+		PermName  string `json:"permName"`
+	}
+
+	err := c.GetRequestBody(&req)
+	if err != nil {
+		c.ResponseError("Invalid request body")
+		return
+	}
+
+	affected, err := models.RemoveRolePermission(roleOwner, roleName, req.PermOwner, req.PermName)
 	if err != nil {
 		c.ResponseError(err.Error())
 		return
@@ -438,16 +450,20 @@ func (c *PermissionController) RemoveRolePermission() {
 // ==================== User-Role Assignment ====================
 
 // GetUserRoles gets all roles for a user
-// @router /api/users/:owner/:name/roles [get]
+// @router /api/users/:id/roles [get]
 func (c *PermissionController) GetUserRoles() {
 	if !c.checkPermission("user", "read") {
 		return
 	}
 
-	owner := c.GetString(":owner")
-	name := c.GetString(":name")
+	userIdStr := c.GetString(":id")
+	userId, err := strconv.ParseInt(userIdStr, 10, 64)
+	if err != nil {
+		c.ResponseError("Invalid user ID")
+		return
+	}
 
-	roles, err := models.GetUserRoles(owner, name)
+	roles, err := models.GetUserRoles(userId)
 	if err != nil {
 		c.ResponseError(err.Error())
 		return
@@ -457,27 +473,31 @@ func (c *PermissionController) GetUserRoles() {
 }
 
 // AddUserRole assigns a role to a user
-// @router /api/users/:owner/:name/roles [post]
+// @router /api/users/:id/roles [post]
 func (c *PermissionController) AddUserRole() {
 	if !c.checkPermission("user", "write") {
 		return
 	}
 
-	userOwner := c.GetString(":owner")
-	userName := c.GetString(":name")
+	userIdStr := c.GetString(":id")
+	userId, err := strconv.ParseInt(userIdStr, 10, 64)
+	if err != nil {
+		c.ResponseError("Invalid user ID")
+		return
+	}
 
 	var req struct {
 		RoleOwner string `json:"roleOwner"`
 		RoleName  string `json:"roleName"`
 	}
 
-	err := c.GetRequestBody(&req)
+	err = c.GetRequestBody(&req)
 	if err != nil {
 		c.ResponseError("Invalid request body")
 		return
 	}
 
-	affected, err := models.AddUserRole(userOwner, userName, req.RoleOwner, req.RoleName)
+	affected, err := models.AddUserRole(userId, req.RoleOwner, req.RoleName)
 	if err != nil {
 		c.ResponseError(err.Error())
 		return
@@ -489,24 +509,37 @@ func (c *PermissionController) AddUserRole() {
 	}
 
 	// Invalidate user cache
-	services.InvalidateUserCache(models.GetId(userOwner, userName))
+	services.InvalidateUserCache(fmt.Sprintf("%d", userId))
 
 	c.ResponseOk()
 }
 
 // RemoveUserRole removes a role from a user
-// @router /api/users/:owner/:name/roles/:roleOwner/:roleName [delete]
+// @router /api/users/:id/roles/remove [post]
 func (c *PermissionController) RemoveUserRole() {
 	if !c.checkPermission("user", "write") {
 		return
 	}
 
-	userOwner := c.GetString(":owner")
-	userName := c.GetString(":name")
-	roleOwner := c.GetString(":roleOwner")
-	roleName := c.GetString(":roleName")
+	userIdStr := c.GetString(":id")
+	userId, err := strconv.ParseInt(userIdStr, 10, 64)
+	if err != nil {
+		c.ResponseError("Invalid user ID")
+		return
+	}
 
-	affected, err := models.RemoveUserRole(userOwner, userName, roleOwner, roleName)
+	var req struct {
+		RoleOwner string `json:"roleOwner"`
+		RoleName  string `json:"roleName"`
+	}
+
+	err = c.GetRequestBody(&req)
+	if err != nil {
+		c.ResponseError("Invalid request body")
+		return
+	}
+
+	affected, err := models.RemoveUserRole(userId, req.RoleOwner, req.RoleName)
 	if err != nil {
 		c.ResponseError(err.Error())
 		return
@@ -519,22 +552,26 @@ func (c *PermissionController) RemoveUserRole() {
 	}
 
 	// Invalidate user cache
-	services.InvalidateUserCache(models.GetId(userOwner, userName))
+	services.InvalidateUserCache(fmt.Sprintf("%d", userId))
 
 	c.ResponseOk()
 }
 
 // GetUserPermissions gets all effective permissions for a user
-// @router /api/users/:owner/:name/permissions [get]
+// @router /api/users/:id/permissions [get]
 func (c *PermissionController) GetUserPermissions() {
 	if !c.checkPermission("user", "read") {
 		return
 	}
 
-	owner := c.GetString(":owner")
-	name := c.GetString(":name")
+	userIdStr := c.GetString(":id")
+	userId, err := strconv.ParseInt(userIdStr, 10, 64)
+	if err != nil {
+		c.ResponseError("Invalid user ID")
+		return
+	}
 
-	perms, err := services.GetUserEffectivePermissions(owner, name)
+	perms, err := services.GetUserEffectivePermissions(userId)
 	if err != nil {
 		c.ResponseError(err.Error())
 		return

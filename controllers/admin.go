@@ -5,11 +5,14 @@ package controllers
 
 import (
 	"context"
+	"strconv"
 	"time"
 
 	"github.com/oauth-server/oauth-server/models"
 	"github.com/oauth-server/oauth-server/services"
 )
+
+var serverStartTime = time.Now()
 
 type AdminController struct {
 	BaseController
@@ -60,10 +63,8 @@ func (c *AdminController) GetUsers() {
 		return
 	}
 
-	owner := c.GetString("owner", "built-in")
-
 	users := []models.User{}
-	err := models.GetEngine().Find(&users, &models.User{Owner: owner})
+	err := models.GetEngine().Find(&users)
 	if err != nil {
 		c.ResponseError(err.Error())
 		return
@@ -78,16 +79,20 @@ func (c *AdminController) GetUsers() {
 }
 
 // GetUser gets a specific user
-// @router /api/admin/users/:owner/:name [get]
+// @router /api/admin/users/:id [get]
 func (c *AdminController) GetUser() {
 	if !c.checkAdmin() {
 		return
 	}
 
-	owner := c.GetString(":owner")
-	name := c.GetString(":name")
+	idStr := c.GetString(":id")
+	id, err := strconv.ParseInt(idStr, 10, 64)
+	if err != nil {
+		c.ResponseError("Invalid user ID")
+		return
+	}
 
-	user, err := models.GetUser(owner, name)
+	user, err := models.GetUserById(id)
 	if err != nil {
 		c.ResponseError(err.Error())
 		return
@@ -124,9 +129,7 @@ func (c *AdminController) CreateUser() {
 	if user.CreatedTime == "" {
 		user.CreatedTime = time.Now().Format(time.RFC3339)
 	}
-	if user.Id == "" {
-		user.Id = models.GenerateRandomString(16)
-	}
+	// Id is auto-increment, no need to set it manually
 
 	// TODO: Hash password
 
@@ -148,23 +151,28 @@ func (c *AdminController) CreateUser() {
 }
 
 // UpdateUser updates a user
-// @router /api/admin/users/:owner/:name [put]
+// @router /api/admin/users/:id [put]
 func (c *AdminController) UpdateUser() {
 	if !c.checkAdmin() {
 		return
 	}
 
-	owner := c.GetString(":owner")
-	name := c.GetString(":name")
+	idStr := c.GetString(":id")
+	id, err := strconv.ParseInt(idStr, 10, 64)
+	if err != nil {
+		c.ResponseError("Invalid user ID")
+		return
+	}
 
 	var user models.User
-	err := c.GetRequestBody(&user)
+	err = c.GetRequestBody(&user)
 	if err != nil {
 		c.ResponseError("Invalid request body")
 		return
 	}
 
-	affected, err := models.UpdateUser(owner, name, &user)
+	user.Id = id
+	affected, err := models.UpdateUser(id, &user)
 	if err != nil {
 		c.ResponseError(err.Error())
 		return
@@ -183,16 +191,33 @@ func (c *AdminController) UpdateUser() {
 }
 
 // DeleteUser deletes a user
-// @router /api/admin/users/:owner/:name [delete]
+// @router /api/admin/users/:id [delete]
 func (c *AdminController) DeleteUser() {
 	if !c.checkAdmin() {
 		return
 	}
 
-	owner := c.GetString(":owner")
-	name := c.GetString(":name")
+	idStr := c.GetString(":id")
+	id, err := strconv.ParseInt(idStr, 10, 64)
+	if err != nil {
+		c.ResponseError("Invalid user ID")
+		return
+	}
 
-	affected, err := models.DeleteUser(owner, name)
+	// Get user first for cache invalidation
+	user, err := models.GetUserById(id)
+	if err != nil {
+		c.ResponseError(err.Error())
+		return
+	}
+
+	if user == nil {
+		c.Ctx.Output.SetStatus(404)
+		c.ResponseError("User not found")
+		return
+	}
+
+	affected, err := models.DeleteUser(id)
 	if err != nil {
 		c.ResponseError(err.Error())
 		return
@@ -205,7 +230,7 @@ func (c *AdminController) DeleteUser() {
 	}
 
 	// Invalidate cache
-	services.InvalidateUserCache(models.GetId(owner, name))
+	services.InvalidateUserCache(user.GetId())
 
 	c.ResponseOk()
 }
@@ -226,6 +251,22 @@ func (c *AdminController) GetApplications() {
 	if err != nil {
 		c.ResponseError(err.Error())
 		return
+	}
+
+	// Ensure array fields are not nil
+	for i := range apps {
+		if apps[i].RedirectUris == nil {
+			apps[i].RedirectUris = []string{}
+		}
+		if apps[i].GrantTypes == nil {
+			apps[i].GrantTypes = []string{}
+		}
+		if apps[i].Scopes == nil {
+			apps[i].Scopes = []string{}
+		}
+		if apps[i].Tags == nil {
+			apps[i].Tags = []string{}
+		}
 	}
 
 	c.ResponseOk(apps)
@@ -251,6 +292,20 @@ func (c *AdminController) GetApplication() {
 		c.Ctx.Output.SetStatus(404)
 		c.ResponseError("Application not found")
 		return
+	}
+
+	// Ensure array fields are not nil
+	if app.RedirectUris == nil {
+		app.RedirectUris = []string{}
+	}
+	if app.GrantTypes == nil {
+		app.GrantTypes = []string{}
+	}
+	if app.Scopes == nil {
+		app.Scopes = []string{}
+	}
+	if app.Tags == nil {
+		app.Tags = []string{}
 	}
 
 	c.ResponseOk(app)
@@ -280,6 +335,21 @@ func (c *AdminController) CreateApplication() {
 	if app.CreatedTime == "" {
 		app.CreatedTime = time.Now().Format(time.RFC3339)
 	}
+	if app.ExpireInHours == 0 {
+		app.ExpireInHours = 168 // 7 days
+	}
+	if app.RefreshExpireInHours == 0 {
+		app.RefreshExpireInHours = 720 // 30 days
+	}
+	if app.TokenFormat == "" {
+		app.TokenFormat = "JWT"
+	}
+	if len(app.GrantTypes) == 0 {
+		app.GrantTypes = []string{"authorization_code", "password", "client_credentials", "refresh_token"}
+	}
+	if len(app.Scopes) == 0 {
+		app.Scopes = []string{"openid", "profile", "email"}
+	}
 
 	affected, err := models.AddApplication(&app)
 	if err != nil {
@@ -305,14 +375,83 @@ func (c *AdminController) UpdateApplication() {
 	owner := c.GetString(":owner")
 	name := c.GetString(":name")
 
-	var app models.Application
-	err := c.GetRequestBody(&app)
+	// Get existing application
+	existingApp, err := models.GetApplication(owner, name)
+	if err != nil {
+		c.ResponseError(err.Error())
+		return
+	}
+
+	if existingApp == nil {
+		c.Ctx.Output.SetStatus(404)
+		c.ResponseError("Application not found")
+		return
+	}
+
+	// Parse update request
+	var updateData map[string]interface{}
+	err = c.GetRequestBody(&updateData)
 	if err != nil {
 		c.ResponseError("Invalid request body")
 		return
 	}
 
-	affected, err := models.UpdateApplication(owner, name, &app)
+	// Update only provided fields
+	if val, ok := updateData["name"]; ok {
+		if strVal, ok := val.(string); ok && strVal != "" {
+			existingApp.Name = strVal
+		}
+	}
+	if val, ok := updateData["displayName"]; ok {
+		if strVal, ok := val.(string); ok {
+			existingApp.DisplayName = strVal
+		}
+	}
+	if val, ok := updateData["logo"]; ok {
+		if strVal, ok := val.(string); ok {
+			existingApp.Logo = strVal
+		}
+	}
+	if val, ok := updateData["redirectUris"]; ok {
+		if arrVal, ok := val.([]interface{}); ok {
+			uris := make([]string, 0, len(arrVal))
+			for _, v := range arrVal {
+				if strVal, ok := v.(string); ok {
+					uris = append(uris, strVal)
+				}
+			}
+			existingApp.RedirectUris = uris
+		}
+	}
+	if val, ok := updateData["grantTypes"]; ok {
+		if arrVal, ok := val.([]interface{}); ok {
+			types := make([]string, 0, len(arrVal))
+			for _, v := range arrVal {
+				if strVal, ok := v.(string); ok {
+					types = append(types, strVal)
+				}
+			}
+			existingApp.GrantTypes = types
+		}
+	}
+	if val, ok := updateData["scopes"]; ok {
+		if arrVal, ok := val.([]interface{}); ok {
+			scopes := make([]string, 0, len(arrVal))
+			for _, v := range arrVal {
+				if strVal, ok := v.(string); ok {
+					scopes = append(scopes, strVal)
+				}
+			}
+			existingApp.Scopes = scopes
+		}
+	}
+	if val, ok := updateData["organization"]; ok {
+		if strVal, ok := val.(string); ok {
+			existingApp.Organization = strVal
+		}
+	}
+
+	affected, err := models.UpdateApplication(owner, name, existingApp)
 	if err != nil {
 		c.ResponseError(err.Error())
 		return
@@ -324,7 +463,7 @@ func (c *AdminController) UpdateApplication() {
 		return
 	}
 
-	c.ResponseOk(app)
+	c.ResponseOk(existingApp)
 }
 
 // DeleteApplication deletes an application
@@ -440,15 +579,18 @@ func (c *AdminController) GetStats() {
 	// Count tokens
 	tokenCount, _ := models.GetEngine().Count(&models.Token{})
 
-	// Count active tokens (not expired)
-	activeTokenCount, _ := models.GetEngine().Where("expires_in > 0").Count(&models.Token{})
+	// Count active tokens (not revoked and not expired)
+	now := time.Now().Unix()
+	activeTokenCount, _ := models.GetEngine().
+		Where("expires_in > 0").
+		Where("(expires_at = 0 OR expires_at > ?)", now).
+		Count(&models.Token{})
 
 	stats := map[string]interface{}{
-		"users":         userCount,
-		"applications":  appCount,
-		"tokens":        tokenCount,
-		"active_tokens": activeTokenCount,
-		"timestamp":     time.Now().Format(time.RFC3339),
+		"userCount":        userCount,
+		"applicationCount": appCount,
+		"tokenCount":       tokenCount,
+		"activeTokenCount": activeTokenCount,
 	}
 
 	c.ResponseOk(stats)
@@ -461,22 +603,20 @@ func (c *AdminController) GetSystemInfo() {
 		return
 	}
 
+	// Calculate uptime in seconds
+	uptime := int64(time.Since(serverStartTime).Seconds())
+
 	info := map[string]interface{}{
-		"version":    "1.0.0",
-		"go_version": "1.23",
-		"uptime":     time.Now().Format(time.RFC3339),
+		"version":        "1.0.0",
+		"uptime":         uptime,
+		"redisConnected": false,
 	}
 
 	// Check Redis connection
 	if redisClient := services.GetRedisClient(); redisClient != nil {
 		_, err := redisClient.Ping(context.Background()).Result()
-		info["redis_connected"] = err == nil
-	} else {
-		info["redis_connected"] = false
+		info["redisConnected"] = err == nil
 	}
-
-	// Check database connection
-	info["database_connected"] = models.GetEngine().Ping() == nil
 
 	c.ResponseOk(info)
 }

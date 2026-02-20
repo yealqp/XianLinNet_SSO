@@ -34,9 +34,9 @@ func (c *OidcController) Discovery() {
 		"grant_types_supported":                 []string{"authorization_code", "implicit", "password", "client_credentials", "refresh_token", "urn:ietf:params:oauth:grant-type:token-exchange"},
 		"subject_types_supported":               []string{"public"},
 		"id_token_signing_alg_values_supported": []string{"HS256", "RS256"},
-		"scopes_supported":                      []string{"openid", "profile", "email", "phone", "address", "offline_access"},
+		"scopes_supported":                      []string{"openid", "profile", "email", "address", "offline_access"},
 		"token_endpoint_auth_methods_supported": []string{"client_secret_basic", "client_secret_post"},
-		"claims_supported":                      []string{"sub", "iss", "aud", "exp", "iat", "name", "email", "phone", "picture"},
+		"claims_supported":                      []string{"sub", "iss", "aud", "exp", "iat", "name", "email", "picture"},
 		"code_challenge_methods_supported":      []string{"S256"},
 	}
 
@@ -88,14 +88,12 @@ func (c *OidcController) UserInfo() {
 
 	// Return user info
 	userInfo := map[string]interface{}{
-		"sub":                user.GetId(),
-		"name":               user.Name,
-		"preferred_username": user.Name,
-		"given_name":         user.DisplayName,
-		"email":              user.Email,
-		"email_verified":     user.EmailVerified,
-		"phone_number":       user.Phone,
-		"picture":            user.Avatar,
+		"sub":          user.GetId(),
+		"username":     user.Username,
+		"email":        user.Email,
+		"qq":           user.QQ,
+		"is_real_name": user.IsRealName,
+		"picture":      user.Avatar,
 	}
 
 	c.Data["json"] = userInfo

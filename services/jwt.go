@@ -5,6 +5,7 @@ package services
 
 import (
 	"fmt"
+	"strconv"
 	"time"
 
 	"github.com/beego/beego/v2/server/web"
@@ -14,20 +15,21 @@ import (
 
 type Claims struct {
 	Owner       string   `json:"owner"`
-	Name        string   `json:"name"`
 	CreatedTime string   `json:"createdTime"`
 	Id          string   `json:"id"`
 	Type        string   `json:"type"`
-	DisplayName string   `json:"displayName"`
+	Username    string   `json:"username"`
 	Avatar      string   `json:"avatar"`
 	Email       string   `json:"email"`
-	Phone       string   `json:"phone"`
+	QQ          string   `json:"qq"`
+	IsRealName  bool     `json:"isRealName"`
 	IsAdmin     bool     `json:"isAdmin"`
 	Scope       string   `json:"scope"`
 	Iss         string   `json:"iss"`
 	Sub         string   `json:"sub"`
 	Aud         []string `json:"aud"`
 	Nonce       string   `json:"nonce,omitempty"`
+	TokenUse    string   `json:"token_use"` // "access" or "refresh"
 	jwt.RegisteredClaims
 }
 
@@ -49,28 +51,35 @@ func GenerateJwtToken(application *models.Application, user *models.User, scope,
 		origin = "http://localhost:8080"
 	}
 
-	// Create claims
+	// Generate unique JTI for access token using UUID + timestamp
+	accessJti := fmt.Sprintf("%s-%d", models.GenerateClientId(), nowTime.UnixNano())
+
+	// Set NotBefore to a few seconds before now to account for clock skew
+	notBefore := nowTime.Add(-10 * time.Second)
+
+	// Create claims for access token
 	claims := Claims{
 		Owner:       user.Owner,
-		Name:        user.Name,
 		CreatedTime: user.CreatedTime,
-		Id:          user.Id,
+		Id:          fmt.Sprintf("%d", user.Id),
 		Type:        user.Type,
-		DisplayName: user.DisplayName,
+		Username:    user.Username,
 		Avatar:      user.Avatar,
 		Email:       user.Email,
-		Phone:       user.Phone,
+		QQ:          user.QQ,
+		IsRealName:  user.IsRealName,
 		IsAdmin:     user.IsAdmin,
 		Scope:       scope,
 		Iss:         origin,
 		Sub:         user.GetId(),
 		Aud:         []string{application.ClientId},
 		Nonce:       nonce,
+		TokenUse:    "access",
 		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate(expireTime),
 			IssuedAt:  jwt.NewNumericDate(nowTime),
-			NotBefore: jwt.NewNumericDate(nowTime),
-			ID:        models.GenerateRandomString(16),
+			NotBefore: jwt.NewNumericDate(notBefore),
+			ID:        accessJti,
 		},
 	}
 
@@ -81,17 +90,50 @@ func GenerateJwtToken(application *models.Application, user *models.User, scope,
 		return "", "", "", err
 	}
 
+	// Small delay to ensure different timestamp for refresh token
+	time.Sleep(1 * time.Millisecond)
+	refreshNowTime := time.Now()
+
+	// Generate unique JTI for refresh token using UUID + timestamp
+	refreshJti := fmt.Sprintf("%s-%d", models.GenerateClientId(), refreshNowTime.UnixNano())
+
+	// Set NotBefore to a few seconds before now to account for clock skew
+	refreshNotBefore := refreshNowTime.Add(-10 * time.Second)
+
 	// Generate refresh token with longer expiration
-	refreshClaims := claims
-	refreshClaims.ExpiresAt = jwt.NewNumericDate(refreshExpireTime)
+	// Create a new claims object for refresh token
+	refreshClaims := Claims{
+		Owner:       user.Owner,
+		CreatedTime: user.CreatedTime,
+		Id:          fmt.Sprintf("%d", user.Id),
+		Type:        user.Type,
+		Username:    user.Username,
+		Avatar:      user.Avatar,
+		Email:       user.Email,
+		QQ:          user.QQ,
+		IsRealName:  user.IsRealName,
+		IsAdmin:     user.IsAdmin,
+		Scope:       scope,
+		Iss:         origin,
+		Sub:         user.GetId(),
+		Aud:         []string{application.ClientId},
+		Nonce:       nonce,
+		TokenUse:    "refresh",
+		RegisteredClaims: jwt.RegisteredClaims{
+			ExpiresAt: jwt.NewNumericDate(refreshExpireTime),
+			IssuedAt:  jwt.NewNumericDate(refreshNowTime),
+			NotBefore: jwt.NewNumericDate(refreshNotBefore),
+			ID:        refreshJti,
+		},
+	}
 	refreshToken := jwt.NewWithClaims(jwt.SigningMethodHS256, refreshClaims)
 	refreshTokenString, err := refreshToken.SignedString([]byte(jwtSecret))
 	if err != nil {
 		return "", "", "", err
 	}
 
-	// Generate token name
-	tokenName := fmt.Sprintf("token_%s_%d", user.Name, nowTime.Unix())
+	// Generate token name with nanosecond precision
+	tokenName := fmt.Sprintf("token_%d_%d", user.Id, nowTime.UnixNano())
 
 	return accessToken, refreshTokenString, tokenName, nil
 }
@@ -128,8 +170,13 @@ func ValidateToken(tokenString string) (*models.User, error) {
 		return nil, err
 	}
 
-	// Get user from database
-	user, err := models.GetUser(claims.Owner, claims.Name)
+	// Get user by ID from claims
+	userId, err := strconv.ParseInt(claims.Id, 10, 64)
+	if err != nil {
+		return nil, fmt.Errorf("invalid user ID in token")
+	}
+
+	user, err := models.GetUserById(userId)
 	if err != nil {
 		return nil, err
 	}

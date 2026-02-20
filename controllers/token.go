@@ -74,7 +74,7 @@ func (c *TokenController) Introspect() {
 		"active":     true,
 		"scope":      claims.Scope,
 		"client_id":  claims.Aud[0],
-		"username":   claims.Name,
+		"username":   claims.Username,
 		"token_type": "Bearer",
 		"exp":        claims.ExpiresAt.Unix(),
 		"iat":        claims.IssuedAt.Unix(),

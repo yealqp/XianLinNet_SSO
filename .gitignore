@@ -5,10 +5,10 @@ oauth-server
 *.dll
 *.so
 *.dylib
-
+.env
 # Test binary
 *.test
-
+.kiro
 # Output of the go coverage tool
 *.out
 
@@ -47,3 +47,4 @@ temp/
 
 *.md
 !README.md
+keys/*

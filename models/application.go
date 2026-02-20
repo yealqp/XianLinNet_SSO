@@ -113,11 +113,21 @@ func GetApplicationByClientId(clientId string) (*Application, error) {
 }
 
 func AddApplication(app *Application) (bool, error) {
+	// Set defaults for required fields
 	if app.ClientId == "" {
 		app.ClientId = GenerateClientId()
 	}
 	if app.ClientSecret == "" {
 		app.ClientSecret = GenerateClientSecret()
+	}
+	if app.ExpireInHours == 0 {
+		app.ExpireInHours = 168 // 7 days
+	}
+	if app.RefreshExpireInHours == 0 {
+		app.RefreshExpireInHours = 720 // 30 days
+	}
+	if app.TokenFormat == "" {
+		app.TokenFormat = "JWT"
 	}
 
 	affected, err := engine.Insert(app)

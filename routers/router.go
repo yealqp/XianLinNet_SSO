@@ -12,7 +12,12 @@ func Init() {
 	// Auth routes
 	authCtrl := &controllers.AuthController{}
 	web.Router("/oauth/authorize", authCtrl, "get:Authorize")
-	web.Router("/api/login", authCtrl, "post:Login")
+	web.Router("/api/auth/application-info", authCtrl, "get:GetApplicationInfo")
+	web.Router("/api/auth/login", authCtrl, "post:Login")
+	web.Router("/api/auth/register", authCtrl, "post:Register")
+	web.Router("/api/auth/send-code", authCtrl, "post:SendVerificationCode")
+	web.Router("/api/auth/reset-password", authCtrl, "post:ResetPassword")
+	web.Router("/api/auth/update-profile", authCtrl, "post:UpdateProfile")
 
 	// Token routes
 	tokenCtrl := &controllers.TokenController{}
@@ -37,16 +42,20 @@ func Init() {
 
 	// User management
 	web.Router("/api/admin/users", adminCtrl, "get:GetUsers;post:CreateUser")
-	web.Router("/api/admin/users/:owner/:name", adminCtrl, "get:GetUser;put:UpdateUser;delete:DeleteUser")
+	web.Router("/api/admin/users/:id", adminCtrl, "get:GetUser")
+	web.Router("/api/admin/users/:id/update", adminCtrl, "post:UpdateUser")
+	web.Router("/api/admin/users/:id/delete", adminCtrl, "post:DeleteUser")
 
 	// Application management
 	web.Router("/api/admin/applications", adminCtrl, "get:GetApplications;post:CreateApplication")
-	web.Router("/api/admin/applications/:owner/:name", adminCtrl, "get:GetApplication;put:UpdateApplication;delete:DeleteApplication")
+	web.Router("/api/admin/applications/:owner/:name", adminCtrl, "get:GetApplication")
+	web.Router("/api/admin/applications/:owner/:name/update", adminCtrl, "post:UpdateApplication")
+	web.Router("/api/admin/applications/:owner/:name/delete", adminCtrl, "post:DeleteApplication")
 
 	// Token management
 	web.Router("/api/admin/tokens", adminCtrl, "get:GetTokens")
-	web.Router("/api/admin/tokens/:owner/:name", adminCtrl, "delete:RevokeToken")
-	web.Router("/api/admin/tokens/user/:owner/:username", adminCtrl, "delete:RevokeUserTokens")
+	web.Router("/api/admin/tokens/:owner/:name/revoke", adminCtrl, "post:RevokeToken")
+	web.Router("/api/admin/tokens/user/:owner/:username/revoke", adminCtrl, "post:RevokeUserTokens")
 
 	// Statistics and system
 	web.Router("/api/admin/stats", adminCtrl, "get:GetStats")
@@ -58,16 +67,26 @@ func Init() {
 
 	// Role management
 	web.Router("/api/roles", permCtrl, "get:GetRoles;post:CreateRole")
-	web.Router("/api/roles/:owner/:name", permCtrl, "get:GetRole;put:UpdateRole;delete:DeleteRole")
+	web.Router("/api/roles/:owner/:name", permCtrl, "get:GetRole")
+	web.Router("/api/roles/:owner/:name/update", permCtrl, "post:UpdateRole")
+	web.Router("/api/roles/:owner/:name/delete", permCtrl, "post:DeleteRole")
 	web.Router("/api/roles/:owner/:name/permissions", permCtrl, "get:GetRolePermissions;post:AddRolePermission")
-	web.Router("/api/roles/:owner/:name/permissions/:permOwner/:permName", permCtrl, "delete:RemoveRolePermission")
+	web.Router("/api/roles/:owner/:name/permissions/remove", permCtrl, "post:RemoveRolePermission")
 
 	// Permission management
 	web.Router("/api/permissions", permCtrl, "get:GetPermissions;post:CreatePermission")
-	web.Router("/api/permissions/:owner/:name", permCtrl, "get:GetPermission;put:UpdatePermission;delete:DeletePermission")
+	web.Router("/api/permissions/:owner/:name", permCtrl, "get:GetPermission")
+	web.Router("/api/permissions/:owner/:name/update", permCtrl, "post:UpdatePermission")
+	web.Router("/api/permissions/:owner/:name/delete", permCtrl, "post:DeletePermission")
 
 	// User role and permission management
-	web.Router("/api/users/:owner/:name/roles", permCtrl, "get:GetUserRoles;post:AddUserRole")
-	web.Router("/api/users/:owner/:name/roles/:roleOwner/:roleName", permCtrl, "delete:RemoveUserRole")
-	web.Router("/api/users/:owner/:name/permissions", permCtrl, "get:GetUserPermissions")
+	web.Router("/api/users/:id/roles", permCtrl, "get:GetUserRoles;post:AddUserRole")
+	web.Router("/api/users/:id/roles/remove", permCtrl, "post:RemoveUserRole")
+	web.Router("/api/users/:id/permissions", permCtrl, "get:GetUserPermissions")
+
+	// Real name verification routes
+	realnameCtrl := &controllers.RealNameController{}
+	web.Router("/api/realname/verify", realnameCtrl, "post:VerifyRealName")
+	web.Router("/api/realname/submit", realnameCtrl, "post:SubmitRealName")
+	web.Router("/api/admin/realname/:userId", realnameCtrl, "get:GetRealNameInfo")
 }
