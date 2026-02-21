@@ -717,3 +717,40 @@ func verifyPassword(hashedPassword, plainPassword, salt string) bool {
 	// Direct comparison (INSECURE - only for testing)
 	return hashedPassword == plainPassword
 }
+
+// RevokeToken revokes a token (access or refresh token)
+// Requirements: 6.4
+func RevokeToken(token string, tokenTypeHint string) error {
+	var dbToken *models.Token
+	var err error
+
+	// Try to find the token based on the hint
+	if tokenTypeHint == "refresh_token" {
+		dbToken, err = models.GetTokenByRefreshToken(token)
+	} else {
+		// Try access token first
+		dbToken, err = models.GetTokenByAccessToken(token)
+		// If not found, try refresh token
+		if dbToken == nil && err == nil {
+			dbToken, err = models.GetTokenByRefreshToken(token)
+		}
+	}
+
+	if err != nil {
+		return err
+	}
+
+	if dbToken != nil {
+		// Mark token as revoked by setting ExpiresIn to 0
+		dbToken.ExpiresIn = 0
+		_, err = models.UpdateToken(dbToken.Owner, dbToken.Name, dbToken)
+		if err != nil {
+			return err
+		}
+
+		// Clear from cache if cached
+		DeleteCachedToken(dbToken.AccessTokenHash)
+	}
+
+	return nil
+}

@@ -149,3 +149,12 @@ func CheckRateLimit(key string, limit int) (bool, error) {
 
 	return count >= limit, nil
 }
+
+// ClearCache clears all cache entries in Redis
+func ClearCache() error {
+	if redisClient == nil {
+		return nil // Redis not configured
+	}
+
+	return redisClient.FlushDB(ctx).Err()
+}
