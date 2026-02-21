@@ -1,5 +1,5 @@
 import { apiClient } from './client'
-import type { LoginRequest, LoginResponse, RegisterRequest, UserInfoResponse, ApiResponse } from './types'
+import type { LoginResponse, UserInfoResponse, ApiResponse } from './types'
 
 export const authApi = {
   async login(data: { email: string; password: string; captchaToken?: string }) {
@@ -44,12 +44,12 @@ export const authApi = {
     return response.data
   },
 
-  async submitRealName(data: { userId: number; name: string; idcard: string }) {
+  async submitRealName(data: { userId: string | number; name: string; idcard: string }) {
     const response = await apiClient.post<ApiResponse<{ message: string; order_no: string }>>('/realname/submit', data)
     return response.data
   },
 
-  async updateProfile(data: { userId: number; username: string; qq: string; avatar: string }) {
+  async updateProfile(data: { userId: string | number; username: string; qq: string; avatar: string }) {
     const response = await apiClient.post<ApiResponse<{ message: string; user: any }>>('/auth/update-profile', data)
     return response.data
   },

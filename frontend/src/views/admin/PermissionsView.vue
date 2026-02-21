@@ -13,7 +13,7 @@
       :data-source="permissions"
       :loading="loading"
       :pagination="pagination"
-      row-key="id"
+      :row-key="(record: Permission) => `${record.owner}/${record.name}`"
       @change="handleTableChange"
     >
       <template #bodyCell="{ column, record }">
@@ -85,7 +85,7 @@ interface Column {
 }
 
 const columns: Column[] = [
-  { title: 'ID', dataIndex: 'id', key: 'id', width: 80 },
+  { title: '所有者', dataIndex: 'owner', key: 'owner', width: 120 },
   { title: '权限名称', dataIndex: 'name', key: 'name' },
   { title: '描述', dataIndex: 'description', key: 'description' },
   { title: '资源', dataIndex: 'resource', key: 'resource' },
@@ -165,7 +165,7 @@ const handleModalCancel = () => {
 
 const handleDelete = async (permission: Permission) => {
   try {
-    await adminApi.deletePermission(permission.id)
+    await adminApi.deletePermission(permission.owner, permission.name)
     message.success('权限删除成功')
     loadData()
   } catch (error) {

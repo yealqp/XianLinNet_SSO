@@ -13,12 +13,12 @@
       :data-source="roles"
       :loading="loading"
       :pagination="pagination"
-      row-key="id"
+      :row-key="(record: Role) => `${record.owner}/${record.name}`"
       @change="handleTableChange"
     >
       <template #bodyCell="{ column, record }">
         <template v-if="column.key === 'permissions'">
-          <a-tag v-for="perm in record.permissions" :key="perm.id" color="blue">
+          <a-tag v-for="perm in (record.permissions || [])" :key="`${perm.owner}/${perm.name}`" color="blue">
             {{ perm.name }}
           </a-tag>
         </template>
@@ -131,7 +131,7 @@ interface Column {
 }
 
 const columns: Column[] = [
-  { title: 'ID', dataIndex: 'id', key: 'id', width: 80 },
+  { title: '所有者', dataIndex: 'owner', key: 'owner', width: 120 },
   { title: '角色名称', dataIndex: 'name', key: 'name' },
   { title: '描述', dataIndex: 'description', key: 'description' },
   { title: '权限', key: 'permissions' },
@@ -162,14 +162,16 @@ const modalTitle = ref('新建角色')
 
 const availablePermissions = computed(() => {
   return allPermissions.value.map(p => ({
-    key: String(p.id),
-    ...p
+    key: `${p.owner}/${p.name}`,
+    name: p.name,
+    description: p.description,
+    owner: p.owner
   }))
 })
 
 const selectedPermissions = computed(() => {
   return allPermissions.value.filter(p =>
-    selectedPermissionKeys.value.includes(String(p.id))
+    selectedPermissionKeys.value.includes(`${p.owner}/${p.name}`)
   )
 })
 
@@ -205,7 +207,7 @@ const showCreateModal = () => {
 
 const showPermissionsModal = (role: Role) => {
   currentRole.value = role
-  selectedPermissionKeys.value = role.permissions.map(p => String(p.id))
+  selectedPermissionKeys.value = (role.permissions || []).map(p => `${p.owner}/${p.name}`)
   permissionsModalVisible.value = true
 }
 
@@ -243,7 +245,7 @@ const handleTransferChange = (keys: string[]) => {
 
 const removePermission = (permission: Permission) => {
   selectedPermissionKeys.value = selectedPermissionKeys.value.filter(
-    key => key !== String(permission.id)
+    key => key !== `${permission.owner}/${permission.name}`
   )
 }
 
@@ -251,18 +253,32 @@ const handleSavePermissions = async () => {
   if (!currentRole.value) return
   
   try {
-    const currentKeys = currentRole.value.permissions.map(p => String(p.id))
+    const currentKeys = (currentRole.value.permissions || []).map(p => `${p.owner}/${p.name}`)
     const newKeys = selectedPermissionKeys.value
     
-    const toAdd = newKeys.filter(k => !currentKeys.includes(k))
-    const toRemove = currentKeys.filter(k => !newKeys.includes(k))
+    const toAdd = newKeys.filter((k: string) => !currentKeys.includes(k))
+    const toRemove = currentKeys.filter((k: string) => !newKeys.includes(k))
     
     for (const key of toAdd) {
-      await adminApi.assignRolePermission(currentRole.value.id, Number(key))
+      const parts = key.split('/')
+      if (parts.length === 2) {
+        const permOwner = parts[0]
+        const permName = parts[1]
+        if (permOwner && permName) {
+          await adminApi.assignRolePermission(currentRole.value.owner, currentRole.value.name, permOwner, permName)
+        }
+      }
     }
     
     for (const key of toRemove) {
-      await adminApi.removeRolePermission(currentRole.value.id, Number(key))
+      const parts = key.split('/')
+      if (parts.length === 2) {
+        const permOwner = parts[0]
+        const permName = parts[1]
+        if (permOwner && permName) {
+          await adminApi.removeRolePermission(currentRole.value.owner, currentRole.value.name, permOwner, permName)
+        }
+      }
     }
     
     message.success('权限更新成功')
@@ -276,7 +292,7 @@ const handleSavePermissions = async () => {
 
 const handleDelete = async (role: Role) => {
   try {
-    await adminApi.deleteRole(role.id)
+    await adminApi.deleteRole(role.owner, role.name)
     message.success('角色删除成功')
     loadData()
   } catch (error) {

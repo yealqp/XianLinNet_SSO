@@ -197,12 +197,22 @@ const handleUpdate = async () => {
       message.success('个人资料更新成功')
       
       // 更新本地存储的用户信息
-      if (authStore.userInfo && response.data?.user) {
-        authStore.userInfo.username = response.data.user.username
-        authStore.userInfo.qq = response.data.user.qq
-        authStore.userInfo.avatar = response.data.user.avatar
-        // 保存到 localStorage
-        storage.setUserInfo(authStore.userInfo)
+      if (authStore.userInfo && response.status === 'ok') {
+        // 处理可能的嵌套 ApiResponse
+        let userData: any
+        if ('data' in response && response.data) {
+          userData = response.data
+        } else {
+          userData = response
+        }
+        
+        if (userData?.user) {
+          authStore.userInfo.username = userData.user.username
+          authStore.userInfo.qq = userData.user.qq
+          authStore.userInfo.avatar = userData.user.avatar
+          // 保存到 localStorage
+          storage.setUserInfo(authStore.userInfo)
+        }
       }
     } else {
       message.error(response.msg || '更新失败')

@@ -103,7 +103,7 @@
 
 <script setup lang="ts">
 import { ref, onMounted, computed } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
+import { useRoute } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { authApi } from '@/api/auth'
 import { AppstoreOutlined, CheckCircleOutlined } from '@ant-design/icons-vue'
@@ -111,7 +111,6 @@ import AuthLayout from '@/components/layout/AuthLayout.vue'
 import { message } from 'ant-design-vue'
 
 const route = useRoute()
-const router = useRouter()
 const authStore = useAuthStore()
 
 // 状态
@@ -172,16 +171,23 @@ const requestedScopes = computed(() => {
 // 加载应用信息
 const loadAppInfo = async () => {
   try {
-    const response = await authApi.getApplicationInfo(clientId.value)
+    const apiResponse = await authApi.getApplicationInfo(clientId.value)
+    // 处理可能的嵌套 ApiResponse
+    let data: any
+    if ('data' in apiResponse && apiResponse.data) {
+      data = apiResponse.data
+    } else {
+      data = apiResponse
+    }
     
-    if (response.status === 'ok' && response.data) {
+    if (data) {
       appInfo.value = {
-        name: response.data.name,
-        displayName: response.data.displayName || response.data.name,
-        description: response.data.description || '第三方应用',
-        logo: response.data.logo || '',
-        homepageUrl: response.data.homepageUrl || '',
-        organization: response.data.organization || ''
+        name: data.name || clientId.value,
+        displayName: data.displayName || data.name || '第三方应用',
+        description: data.description || '第三方应用',
+        logo: data.logo || '',
+        homepageUrl: data.homepageUrl || '',
+        organization: data.organization || ''
       }
     } else {
       // Fallback to default values

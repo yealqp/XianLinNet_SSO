@@ -32,10 +32,17 @@ export const useAuthStore = defineStore('auth', () => {
 
   async function login(data: LoginRequest) {
     try {
-      const loginData = await authApi.login(data)
+      const apiResponse = await authApi.login(data)
+      // 处理可能的嵌套 ApiResponse
+      let loginData: any
+      if ('data' in apiResponse && apiResponse.data) {
+        loginData = apiResponse.data
+      } else {
+        loginData = apiResponse
+      }
       
       // 检查是否有 access_token
-      if (!loginData.access_token) {
+      if (!loginData || !loginData.access_token) {
         throw new Error('登录失败：未收到访问令牌')
       }
       
@@ -48,7 +55,15 @@ export const useAuthStore = defineStore('auth', () => {
       }
       
       if (loginData.user) {
-        userInfo.value = loginData.user
+        userInfo.value = {
+          id: String(loginData.user.id),
+          email: loginData.user.email,
+          username: loginData.user.username,
+          isAdmin: loginData.user.isAdmin,
+          isRealName: loginData.user.isRealName,
+          qq: loginData.user.qq,
+          avatar: loginData.user.avatar
+        }
         storage.setUserInfo(userInfo.value)
       }
       
@@ -74,15 +89,23 @@ export const useAuthStore = defineStore('auth', () => {
 
   async function fetchUserInfo() {
     try {
-      const response = await authApi.getUserInfo()
+      const apiResponse = await authApi.getUserInfo()
+      // 处理可能的嵌套 ApiResponse
+      let data: any
+      if ('data' in apiResponse && apiResponse.data) {
+        data = apiResponse.data
+      } else {
+        data = apiResponse
+      }
+      
       userInfo.value = {
-        id: response.sub || '',
-        email: response.email || '',
-        username: response.username || response.name || response.preferred_username || '',
+        id: data?.sub || String(data?.id) || '',
+        email: data?.email || '',
+        username: data?.username || data?.name || data?.preferred_username || '',
         isAdmin: false, // Will be determined by roles/permissions
-        isRealName: response.is_real_name || false,
-        qq: response.qq || '',
-        avatar: response.picture || ''
+        isRealName: data?.is_real_name || false,
+        qq: data?.qq || '',
+        avatar: data?.picture || data?.avatar || ''
       }
       storage.setUserInfo(userInfo.value)
       return userInfo.value

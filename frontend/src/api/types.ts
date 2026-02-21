@@ -104,6 +104,7 @@ export interface RevokeUserTokensRequest {
 }
 
 export interface Permission {
+  id?: string
   owner: string
   name: string
   createdTime: string
@@ -116,7 +117,7 @@ export interface Permission {
 }
 
 export interface CreatePermissionRequest {
-  owner: string
+  owner?: string
   name: string
   displayName?: string
   description?: string
@@ -127,6 +128,7 @@ export interface CreatePermissionRequest {
 }
 
 export interface Role {
+  id?: string
   owner: string
   name: string
   createdTime: string
@@ -136,10 +138,11 @@ export interface Role {
   isEnabled: boolean
   type: string
   organization: string
+  permissions?: Permission[]
 }
 
 export interface CreateRoleRequest {
-  owner: string
+  owner?: string
   name: string
   displayName?: string
   description?: string

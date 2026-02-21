@@ -9,7 +9,7 @@
       :data-source="tokens"
       :loading="loading"
       :pagination="pagination"
-      :row-key="(record) => `${record.owner}/${record.name}`"
+      :row-key="(record: any) => `${record.owner}/${record.name}`"
       @change="handleTableChange"
     >
       <template #bodyCell="{ column, record }">
