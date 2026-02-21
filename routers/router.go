@@ -10,8 +10,8 @@ import (
 )
 
 func Init() {
-	// 注册 CORS 中间件
-	web.InsertFilter("*", web.BeforeRouter, middlewares.CORSMiddleware)
+	// 注册 CORS 中间件 - 在所有路由之前执行
+	web.InsertFilter("*", web.BeforeRouter, middlewares.CORSFilter)
 
 	// Auth routes
 	authCtrl := &controllers.AuthController{}
