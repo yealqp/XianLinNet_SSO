@@ -23,9 +23,11 @@ var CORSFilter = func(ctx *context.Context) {
 	ctx.Output.Header("Access-Control-Max-Age", "86400")
 	ctx.Output.Header("Access-Control-Expose-Headers", "Content-Length, Content-Type")
 
-	// 处理 OPTIONS 预检请求
+	// 处理 OPTIONS 预检请求 - 直接返回，不继续路由
 	if ctx.Input.Method() == "OPTIONS" {
 		ctx.Output.SetStatus(200)
-		return
+		ctx.Output.Body([]byte(""))
+		// 停止后续处理
+		ctx.Abort(200, "")
 	}
 }
