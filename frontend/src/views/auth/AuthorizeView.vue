@@ -288,7 +288,17 @@ const handleAuthorize = async () => {
     // 使用完整的 API URL
     const token = authStore.accessToken
     const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || '/api'
-    const authorizeUrl = apiBaseUrl.replace('/api', '') + '/oauth/authorize'
+    // 构建完整的授权 URL
+    let authorizeUrl: string
+    if (apiBaseUrl.startsWith('http')) {
+      // 生产环境：https://api.account.idcxl.cn/api -> https://api.account.idcxl.cn/oauth/authorize
+      const baseUrl = apiBaseUrl.replace(/\/api$/, '')
+      authorizeUrl = `${baseUrl}/oauth/authorize`
+    } else {
+      // 开发环境：/api -> /oauth/authorize
+      authorizeUrl = '/oauth/authorize'
+    }
+    
     const response = await fetch(`${authorizeUrl}?${params.toString()}`, {
       method: 'GET',
       headers: {
