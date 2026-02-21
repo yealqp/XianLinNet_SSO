@@ -29,8 +29,78 @@ type Claims struct {
 	Sub         string   `json:"sub"`
 	Aud         []string `json:"aud"`
 	Nonce       string   `json:"nonce,omitempty"`
-	TokenUse    string   `json:"token_use"` // "access" or "refresh"
+	TokenUse    string   `json:"token_use"` // "access", "refresh", or "id"
+
+	// OIDC Standard Claims
+	Name              string `json:"name,omitempty"`
+	GivenName         string `json:"given_name,omitempty"`
+	FamilyName        string `json:"family_name,omitempty"`
+	PreferredUsername string `json:"preferred_username,omitempty"`
+	Picture           string `json:"picture,omitempty"`
+	EmailVerified     bool   `json:"email_verified,omitempty"`
+	UpdatedAt         int64  `json:"updated_at,omitempty"`
+
 	jwt.RegisteredClaims
+}
+
+// GenerateIDToken generates an OIDC ID Token
+func GenerateIDToken(application *models.Application, user *models.User, nonce string, accessToken string) (string, error) {
+	nowTime := time.Now()
+	expireTime := nowTime.Add(time.Duration(application.ExpireInHours) * time.Hour)
+
+	// Get JWT secret from config
+	jwtSecret, _ := web.AppConfig.String("jwtSecret")
+	if jwtSecret == "" {
+		jwtSecret = "default-secret-key-change-in-production"
+	}
+
+	// Get origin from config
+	origin, _ := web.AppConfig.String("origin")
+	if origin == "" {
+		origin = "http://localhost:8080"
+	}
+
+	// Generate unique JTI
+	jti := fmt.Sprintf("id-%s-%d", models.GenerateClientId(), nowTime.UnixNano())
+	notBefore := nowTime.Add(-10 * time.Second)
+
+	// Create ID Token claims
+	claims := Claims{
+		Owner:             user.Owner,
+		CreatedTime:       user.CreatedTime,
+		Id:                fmt.Sprintf("%d", user.Id),
+		Type:              user.Type,
+		Username:          user.Username,
+		Email:             user.Email,
+		QQ:                user.QQ,
+		IsRealName:        user.IsRealName,
+		IsAdmin:           user.IsAdmin,
+		Iss:               origin,
+		Sub:               user.GetId(),
+		Aud:               []string{application.ClientId},
+		Nonce:             nonce,
+		TokenUse:          "id",
+		Name:              user.Username,
+		PreferredUsername: user.Username,
+		Picture:           user.Avatar,
+		EmailVerified:     true, // 假设邮箱已验证
+		UpdatedAt:         time.Now().Unix(),
+		RegisteredClaims: jwt.RegisteredClaims{
+			ExpiresAt: jwt.NewNumericDate(expireTime),
+			IssuedAt:  jwt.NewNumericDate(nowTime),
+			NotBefore: jwt.NewNumericDate(notBefore),
+			ID:        jti,
+		},
+	}
+
+	// Generate ID token
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	idToken, err := token.SignedString([]byte(jwtSecret))
+	if err != nil {
+		return "", err
+	}
+
+	return idToken, nil
 }
 
 // GenerateJwtToken generates access and refresh tokens
@@ -59,22 +129,27 @@ func GenerateJwtToken(application *models.Application, user *models.User, scope,
 
 	// Create claims for access token
 	claims := Claims{
-		Owner:       user.Owner,
-		CreatedTime: user.CreatedTime,
-		Id:          fmt.Sprintf("%d", user.Id),
-		Type:        user.Type,
-		Username:    user.Username,
-		Avatar:      user.Avatar,
-		Email:       user.Email,
-		QQ:          user.QQ,
-		IsRealName:  user.IsRealName,
-		IsAdmin:     user.IsAdmin,
-		Scope:       scope,
-		Iss:         origin,
-		Sub:         user.GetId(),
-		Aud:         []string{application.ClientId},
-		Nonce:       nonce,
-		TokenUse:    "access",
+		Owner:             user.Owner,
+		CreatedTime:       user.CreatedTime,
+		Id:                fmt.Sprintf("%d", user.Id),
+		Type:              user.Type,
+		Username:          user.Username,
+		Avatar:            user.Avatar,
+		Email:             user.Email,
+		QQ:                user.QQ,
+		IsRealName:        user.IsRealName,
+		IsAdmin:           user.IsAdmin,
+		Scope:             scope,
+		Iss:               origin,
+		Sub:               user.GetId(),
+		Aud:               []string{application.ClientId},
+		Nonce:             nonce,
+		TokenUse:          "access",
+		Name:              user.Username,
+		PreferredUsername: user.Username,
+		Picture:           user.Avatar,
+		EmailVerified:     true,
+		UpdatedAt:         time.Now().Unix(),
 		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate(expireTime),
 			IssuedAt:  jwt.NewNumericDate(nowTime),

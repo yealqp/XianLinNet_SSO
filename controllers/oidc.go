@@ -4,6 +4,8 @@
 package controllers
 
 import (
+	"time"
+
 	"github.com/beego/beego/v2/server/web"
 	"github.com/oauth-server/oauth-server/services"
 )
@@ -47,10 +49,16 @@ func (c *OidcController) Discovery() {
 // Jwks handles JWKS endpoint
 // @router /.well-known/jwks [get]
 func (c *OidcController) Jwks() {
-	// For simplicity, return empty JWKS
-	// In production, this should return actual public keys
+	// 获取公钥的 JWK 表示
+	jwk, err := services.GetPublicKeyJWK()
+	if err != nil {
+		c.Ctx.Output.SetStatus(500)
+		c.ResponseError("Failed to get public key")
+		return
+	}
+
 	jwks := map[string]interface{}{
-		"keys": []interface{}{},
+		"keys": []interface{}{jwk},
 	}
 
 	c.Data["json"] = jwks
@@ -86,18 +94,49 @@ func (c *OidcController) UserInfo() {
 		return
 	}
 
-	// Return user info
-	userInfo := map[string]interface{}{
-		"sub":          user.GetId(),
-		"username":     user.Username,
-		"email":        user.Email,
-		"qq":           user.QQ,
-		"is_real_name": user.IsRealName,
-		"picture":      user.Avatar,
+	// Parse token to get claims (for scope checking)
+	claims, err := services.ParseJwtToken(token)
+	if err != nil {
+		c.Ctx.Output.SetStatus(401)
+		c.ResponseError("Invalid token claims")
+		return
 	}
+
+	// Build user info based on requested scopes
+	userInfo := map[string]interface{}{
+		"sub": user.GetId(),
+	}
+
+	// Check scopes and add corresponding claims
+	scopes := claims.Scope
+
+	// Profile scope
+	if contains(scopes, "profile") || contains(scopes, "openid") {
+		userInfo["name"] = user.Username
+		userInfo["preferred_username"] = user.Username
+		userInfo["picture"] = user.Avatar
+		userInfo["updated_at"] = time.Now().Unix()
+	}
+
+	// Email scope
+	if contains(scopes, "email") || contains(scopes, "openid") {
+		userInfo["email"] = user.Email
+		userInfo["email_verified"] = true
+	}
+
+	// Custom claims
+	userInfo["username"] = user.Username
+	userInfo["qq"] = user.QQ
+	userInfo["is_real_name"] = user.IsRealName
+	userInfo["is_admin"] = user.IsAdmin
 
 	c.Data["json"] = userInfo
 	c.ServeJSON()
+}
+
+// contains checks if a string contains a substring
+func contains(s, substr string) bool {
+	return len(s) > 0 && (s == substr || len(s) > len(substr) && (s[:len(substr)+1] == substr+" " || s[len(s)-len(substr)-1:] == " "+substr))
 }
 
 // Register handles dynamic client registration

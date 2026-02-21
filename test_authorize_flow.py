@@ -218,16 +218,4 @@ def test_authorization_flow():
 if __name__ == '__main__':
     import json
     
-    print("\n请确保:")
-    print("1. OAuth 服务器正在运行 (http://localhost:8080)")
-    print("2. 您已经在管理后台创建了应用并获取了 client_id 和 client_secret")
-    print("3. 应用的重定向 URI 包含: http://localhost:8888/callback")
-    print()
-    
-    if not CLIENT_ID or CLIENT_ID == "your_client_id":
-        print("\n✗ 请先配置 CLIENT_ID 和 CLIENT_SECRET")
-        print("  可以使用内置应用: admin/app-built-in")
-        print("  Client ID 和 Secret 可以在管理后台的应用管理中查看")
-        exit(1)
-    
     test_authorization_flow()

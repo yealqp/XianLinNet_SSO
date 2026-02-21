@@ -221,3 +221,39 @@ func GetPublicKeyPEM() (string, error) {
 
 	return string(pem.EncodeToMemory(pubKeyPEM)), nil
 }
+
+// GetPublicKeyJWK 获取公钥的 JWK 格式（用于 OIDC JWKS 端点）
+func GetPublicKeyJWK() (map[string]interface{}, error) {
+	if publicKey == nil {
+		return nil, fmt.Errorf("public key not initialized")
+	}
+
+	// 将 RSA 公钥的 N 和 E 转换为 Base64 URL 编码
+	nBytes := publicKey.N.Bytes()
+	eBytes := make([]byte, 4)
+	// E 通常是 65537 (0x010001)
+	eBytes[0] = byte(publicKey.E >> 24)
+	eBytes[1] = byte(publicKey.E >> 16)
+	eBytes[2] = byte(publicKey.E >> 8)
+	eBytes[3] = byte(publicKey.E)
+
+	// 去掉前导零
+	for len(eBytes) > 1 && eBytes[0] == 0 {
+		eBytes = eBytes[1:]
+	}
+
+	// Base64 URL 编码（无填充）
+	n := base64.RawURLEncoding.EncodeToString(nBytes)
+	e := base64.RawURLEncoding.EncodeToString(eBytes)
+
+	jwk := map[string]interface{}{
+		"kty": "RSA",         // Key Type
+		"use": "sig",         // Public Key Use (signature)
+		"alg": "RS256",       // Algorithm
+		"kid": "default-key", // Key ID
+		"n":   n,             // Modulus
+		"e":   e,             // Exponent
+	}
+
+	return jwk, nil
+}
