@@ -285,9 +285,11 @@ const handleAuthorize = async () => {
     }
 
     // 调用后端授权接口（需要带上 Authorization header）
-    // 注意：这里不使用 apiClient，因为 /oauth/authorize 不在 /api 路径下
+    // 使用完整的 API URL
     const token = authStore.accessToken
-    const response = await fetch(`/oauth/authorize?${params.toString()}`, {
+    const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || '/api'
+    const authorizeUrl = apiBaseUrl.replace('/api', '') + '/oauth/authorize'
+    const response = await fetch(`${authorizeUrl}?${params.toString()}`, {
       method: 'GET',
       headers: {
         'Authorization': `Bearer ${token}`,
