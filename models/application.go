@@ -23,16 +23,16 @@ type Application struct {
 	EnablePassword   bool     `json:"enablePassword"`
 	EnableSignUp     bool     `json:"enableSignUp"`
 	EnableCodeSignin bool     `json:"enableCodeSignin"`
-	GrantTypes       []string `xorm:"varchar(1000) json" json:"grantTypes"`
-	Tags             []string `xorm:"mediumtext json" json:"tags"`
+	GrantTypes       []string `xorm:"text json" json:"grantTypes"`
+	Tags             []string `xorm:"text json" json:"tags"`
 
 	ClientId             string   `xorm:"varchar(100)" json:"clientId"`
 	ClientSecret         string   `xorm:"varchar(100)" json:"clientSecret"`
-	RedirectUris         []string `xorm:"varchar(1000) json" json:"redirectUris"`
+	RedirectUris         []string `xorm:"text json" json:"redirectUris"`
 	TokenFormat          string   `xorm:"varchar(100)" json:"tokenFormat"`
 	ExpireInHours        float64  `json:"expireInHours"`
 	RefreshExpireInHours float64  `json:"refreshExpireInHours"`
-	Scopes               []string `xorm:"varchar(1000) json" json:"scopes"`
+	Scopes               []string `xorm:"text json" json:"scopes"`
 }
 
 func (a *Application) GetId() string {
