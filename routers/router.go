@@ -6,9 +6,13 @@ package routers
 import (
 	"github.com/beego/beego/v2/server/web"
 	"github.com/oauth-server/oauth-server/controllers"
+	"github.com/oauth-server/oauth-server/middlewares"
 )
 
 func Init() {
+	// 注册 CORS 中间件
+	web.InsertFilter("*", web.BeforeRouter, middlewares.CORSMiddleware)
+
 	// Auth routes
 	authCtrl := &controllers.AuthController{}
 	web.Router("/oauth/authorize", authCtrl, "get:Authorize")
