@@ -9,7 +9,7 @@ import (
 
 // CORSFilter handles Cross-Origin Resource Sharing (CORS)
 var CORSFilter = func(ctx *context.Context) {
-	// 允许的源
+	// 获取请求来源
 	origin := ctx.Input.Header("Origin")
 	if origin == "" {
 		origin = "*"
@@ -17,14 +17,15 @@ var CORSFilter = func(ctx *context.Context) {
 
 	// 设置 CORS 响应头
 	ctx.Output.Header("Access-Control-Allow-Origin", origin)
-	ctx.Output.Header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
-	ctx.Output.Header("Access-Control-Allow-Headers", "Content-Type, Authorization, X-Requested-With, Accept")
+	ctx.Output.Header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS, PATCH")
+	ctx.Output.Header("Access-Control-Allow-Headers", "Content-Type, Authorization, X-Requested-With, Accept, Origin")
 	ctx.Output.Header("Access-Control-Allow-Credentials", "true")
 	ctx.Output.Header("Access-Control-Max-Age", "86400")
+	ctx.Output.Header("Access-Control-Expose-Headers", "Content-Length, Content-Type")
 
 	// 处理 OPTIONS 预检请求
 	if ctx.Input.Method() == "OPTIONS" {
-		ctx.Output.SetStatus(204)
-		ctx.Output.Body([]byte(""))
+		ctx.Output.SetStatus(200)
+		return
 	}
 }

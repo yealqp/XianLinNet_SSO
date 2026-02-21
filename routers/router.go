@@ -10,8 +10,12 @@ import (
 )
 
 func Init() {
-	// 注册 CORS 中间件 - 在所有路由之前执行
-	web.InsertFilter("*", web.BeforeRouter, middlewares.CORSFilter)
+	// 注册 CORS 中间件 - 使用 BeforeExec 确保在路由匹配后执行
+	web.InsertFilter("*", web.BeforeExec, middlewares.CORSFilter)
+
+	// 为所有 API 路由添加 OPTIONS 支持
+	web.Router("/api/*", &controllers.BaseController{}, "options:ResponseOk")
+	web.Router("/oauth/*", &controllers.BaseController{}, "options:ResponseOk")
 
 	// Auth routes
 	authCtrl := &controllers.AuthController{}
