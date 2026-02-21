@@ -3,7 +3,7 @@ import type { AxiosInstance, AxiosRequestConfig, AxiosResponse, AxiosError } fro
 import { storage } from '../utils/storage'
 import type { ApiResponse, ApiError } from './types'
 
-const API_BASE_URL = '/api'
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api'
 
 export class ApiClient {
   private instance: AxiosInstance
