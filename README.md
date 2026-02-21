@@ -16,7 +16,7 @@ A full-featured OAuth 2.0 / OpenID Connect server built with Go (Beego) and Vue 
 - 📧 Email verification and password reset
 - 🔑 JWT-based authentication
 - 🎨 Modern Vue 3 + Ant Design Vue frontend
-- 💾 Multiple database support (SQLite, MySQL, PostgreSQL)
+- 💾 PostgreSQL database support
 - 🚀 Redis caching support (optional)
 - 🔒 RSA encryption for sensitive data
 - 🌐 CORS support for cross-origin requests
@@ -42,7 +42,7 @@ A full-featured OAuth 2.0 / OpenID Connect server built with Go (Beego) and Vue 
 
 - Go 1.23 or higher
 - Node.js 18+ and pnpm
-- SQLite (default) or MySQL/PostgreSQL (optional)
+- PostgreSQL 12 or higher
 - Redis (optional, for caching)
 
 ### Quick Start
@@ -60,11 +60,15 @@ cd oauth-server
 # Install Go dependencies
 go mod download
 
+# Setup PostgreSQL database
+# See docs/postgresql-setup.md for detailed instructions
+createdb oauth_server
+
 # Copy configuration file
 copy conf\app.conf.example conf\app.conf
 
 # Edit conf/app.conf and configure:
-# - Database settings
+# - PostgreSQL connection string (REQUIRED)
 # - JWT secret (minimum 32 characters)
 # - Admin credentials (REQUIRED for first run)
 # - SMTP settings (if email verification needed)
@@ -104,13 +108,27 @@ pnpm build
 Edit `conf/app.conf` to configure:
 
 **Required Settings:**
+- Database configuration (PostgreSQL):
+  - `dbHost` - PostgreSQL server address (default: localhost)
+  - `dbPort` - PostgreSQL port (default: 5432)
+  - `dbUser` - Database username
+  - `dbPassword` - Database password
+  - `dbName` - Database name
+  - `dbSSLMode` - SSL mode (disable/require/verify-ca/verify-full)
 - `adminEmail`, `adminPassword`, `adminUsername` - Initial admin user credentials
 - `jwtSecret` - JWT signing key (minimum 32 characters)
 
-**Database Options:**
-- SQLite (default): `driverName = sqlite`, `dataSourceName = ./oauth_server.db`
-- MySQL: `driverName = mysql`, `dataSourceName = user:pass@tcp(host:3306)/dbname?charset=utf8mb4&parseTime=True`
-- PostgreSQL: `driverName = postgres`, `dataSourceName = host=localhost port=5432 user=postgres password=pass dbname=oauth_server`
+**Database Configuration Example:**
+```ini
+dbHost = localhost
+dbPort = 5432
+dbUser = postgres
+dbPassword = password
+dbName = oauth_server
+dbSSLMode = disable
+```
+
+See `docs/postgresql-setup.md` for detailed setup instructions
 
 **Optional Settings:**
 - Redis cache configuration
@@ -190,7 +208,7 @@ Apache License 2.0
 - 📧 邮箱验证和密码重置
 - 🔑 基于 JWT 的身份认证
 - 🎨 现代化的 Vue 3 + Ant Design Vue 前端
-- 💾 支持多种数据库（SQLite、MySQL、PostgreSQL）
+- 💾 PostgreSQL 数据库支持
 - 🚀 Redis 缓存支持（可选）
 - 🔒 敏感数据 RSA 加密
 - 🌐 支持跨域请求 (CORS)
@@ -216,7 +234,7 @@ Apache License 2.0
 
 - Go 1.23 或更高版本
 - Node.js 18+ 和 pnpm
-- SQLite（默认）或 MySQL/PostgreSQL（可选）
+- PostgreSQL 12 或更高版本
 - Redis（可选，用于缓存）
 
 ### 快速开始
@@ -234,11 +252,15 @@ cd oauth-server
 # 安装 Go 依赖
 go mod download
 
+# 设置 PostgreSQL 数据库
+# 详细说明请参见 docs/postgresql-setup.md
+createdb oauth_server
+
 # 复制配置文件
 copy conf\app.conf.example conf\app.conf
 
 # 编辑 conf/app.conf 并配置：
-# - 数据库设置
+# - PostgreSQL 连接字符串（必需）
 # - JWT 密钥（至少 32 个字符）
 # - 管理员凭据（首次运行必需）
 # - SMTP 设置（如需邮箱验证）
@@ -278,13 +300,27 @@ pnpm build
 编辑 `conf/app.conf` 进行配置：
 
 **必需设置：**
+- 数据库配置（PostgreSQL）：
+  - `dbHost` - PostgreSQL 服务器地址（默认：localhost）
+  - `dbPort` - PostgreSQL 端口（默认：5432）
+  - `dbUser` - 数据库用户名
+  - `dbPassword` - 数据库密码
+  - `dbName` - 数据库名称
+  - `dbSSLMode` - SSL 模式（disable/require/verify-ca/verify-full）
 - `adminEmail`、`adminPassword`、`adminUsername` - 初始管理员用户凭据
 - `jwtSecret` - JWT 签名密钥（至少 32 个字符）
 
-**数据库选项：**
-- SQLite（默认）：`driverName = sqlite`，`dataSourceName = ./oauth_server.db`
-- MySQL：`driverName = mysql`，`dataSourceName = user:pass@tcp(host:3306)/dbname?charset=utf8mb4&parseTime=True`
-- PostgreSQL：`driverName = postgres`，`dataSourceName = host=localhost port=5432 user=postgres password=pass dbname=oauth_server`
+**数据库配置示例：**
+```ini
+dbHost = localhost
+dbPort = 5432
+dbUser = postgres
+dbPassword = password
+dbName = oauth_server
+dbSSLMode = disable
+```
+
+详细设置说明请参见 `docs/postgresql-setup.md`
 
 **可选设置：**
 - Redis 缓存配置

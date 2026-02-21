@@ -582,8 +582,8 @@ func (c *AdminController) GetStats() {
 	// Count active tokens (not revoked and not expired)
 	now := time.Now().Unix()
 	activeTokenCount, _ := models.GetEngine().
-		Where("expires_in > 0").
-		Where("(expires_at = 0 OR expires_at > ?)", now).
+		Where("expires_in > ?", 0).
+		Where("expires_at = ? OR expires_at > ?", 0, now).
 		Count(&models.Token{})
 
 	stats := map[string]interface{}{

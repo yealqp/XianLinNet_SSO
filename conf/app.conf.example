@@ -4,18 +4,13 @@ httpport = 8080
 runmode = dev
 copyrequestbody = true
 
-# Database Configuration
-# SQLite (default)
-driverName = sqlite
-dataSourceName = ./oauth_server.db
-
-# MySQL
-# driverName = mysql
-# dataSourceName = root:password@tcp(localhost:3306)/oauth_server?charset=utf8mb4&parseTime=True&loc=Local
-
-# PostgreSQL
-# driverName = postgres
-# dataSourceName = host=localhost port=5432 user=postgres password=password dbname=oauth_server sslmode=disable
+# Database Configuration (PostgreSQL only)
+dbHost = localhost
+dbPort = 5432
+dbUser = postgres
+dbPassword = password
+dbName = oauth_server
+dbSSLMode = disable
 
 # JWT Configuration
 jwtSecret = your-secret-key-change-in-production-min-32-chars

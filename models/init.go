@@ -8,26 +8,45 @@ import (
 	"time"
 
 	"github.com/beego/beego/v2/server/web"
-	_ "github.com/go-sql-driver/mysql"
 	_ "github.com/lib/pq"
 	"github.com/xorm-io/xorm"
 	"golang.org/x/crypto/bcrypt"
-	_ "modernc.org/sqlite"
 )
 
 var engine *xorm.Engine
 
 func InitDB() error {
-	driverName, _ := web.AppConfig.String("driverName")
-	dataSourceName, _ := web.AppConfig.String("dataSourceName")
+	// Read individual database configuration parameters
+	dbHost, _ := web.AppConfig.String("dbHost")
+	dbPort, _ := web.AppConfig.String("dbPort")
+	dbUser, _ := web.AppConfig.String("dbUser")
+	dbPassword, _ := web.AppConfig.String("dbPassword")
+	dbName, _ := web.AppConfig.String("dbName")
+	dbSSLMode, _ := web.AppConfig.String("dbSSLMode")
 
-	if driverName == "" {
-		driverName = "sqlite"
-		dataSourceName = "./oauth_server.db"
+	// Set defaults if not configured
+	if dbHost == "" {
+		dbHost = "localhost"
+	}
+	if dbPort == "" {
+		dbPort = "5432"
+	}
+	if dbUser == "" {
+		dbUser = "postgres"
+	}
+	if dbName == "" {
+		dbName = "oauth_server"
+	}
+	if dbSSLMode == "" {
+		dbSSLMode = "disable"
 	}
 
+	// Build PostgreSQL connection string
+	dataSourceName := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=%s",
+		dbHost, dbPort, dbUser, dbPassword, dbName, dbSSLMode)
+
 	var err error
-	engine, err = xorm.NewEngine(driverName, dataSourceName)
+	engine, err = xorm.NewEngine("postgres", dataSourceName)
 	if err != nil {
 		return err
 	}

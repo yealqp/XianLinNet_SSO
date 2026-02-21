@@ -18,10 +18,10 @@ vendor/
 # Go workspace file
 go.work
 
-# Database files
-*.db
-*.sqlite
-*.sqlite3
+# Database files (PostgreSQL only - no local DB files)
+
+# Docker volumes (data is in named volumes)
+.docker/
 
 # Configuration files (keep .example files)
 conf/app.conf

@@ -88,7 +88,7 @@ func GetUserPermissions(userId int64) ([]*Permission, error) {
 		SELECT DISTINCT p.* FROM permission p
 		INNER JOIN role_permission rp ON p.owner = rp.perm_owner AND p.name = rp.perm_name
 		INNER JOIN user_role ur ON rp.role_owner = ur.role_owner AND rp.role_name = ur.role_name
-		WHERE ur.user_id = ? AND p.is_enabled = 1
+		WHERE ur.user_id = ? AND p.is_enabled = true
 	`, userId).Find(&perms)
 
 	return perms, err

@@ -1,6 +1,8 @@
 package controllers
 
 import (
+	"strconv"
+
 	"github.com/oauth-server/oauth-server/models"
 	"github.com/oauth-server/oauth-server/services"
 )
@@ -47,14 +49,14 @@ func (c *RealNameController) VerifyRealName() {
 // SubmitRealName 提交实名认证
 func (c *RealNameController) SubmitRealName() {
 	var req struct {
-		UserId int64  `json:"userId"`
-		Name   string `json:"name"`
-		IDCard string `json:"idcard"`
+		UserId interface{} `json:"userId"` // 支持字符串或数字
+		Name   string      `json:"name"`
+		IDCard string      `json:"idcard"`
 	}
 
 	err := c.GetRequestBody(&req)
 	if err != nil {
-		c.ResponseError("Invalid request body")
+		c.ResponseError("Invalid request body: " + err.Error())
 		return
 	}
 
@@ -63,12 +65,33 @@ func (c *RealNameController) SubmitRealName() {
 		return
 	}
 
-	if req.UserId == 0 {
+	// 解析 userId，支持字符串或数字类型
+	var userId int64
+	switch v := req.UserId.(type) {
+	case float64:
+		userId = int64(v)
+	case string:
+		parsed, err := strconv.ParseInt(v, 10, 64)
+		if err != nil {
+			c.ResponseError("Invalid userId format")
+			return
+		}
+		userId = parsed
+	case int:
+		userId = int64(v)
+	case int64:
+		userId = v
+	default:
+		c.ResponseError("Invalid userId type")
+		return
+	}
+
+	if userId == 0 {
 		c.ResponseError("用户ID不能为空")
 		return
 	}
 
-	user, err := models.GetUserById(req.UserId)
+	user, err := models.GetUserById(userId)
 	if err != nil || user == nil {
 		c.ResponseError("用户不存在")
 		return
@@ -90,7 +113,7 @@ func (c *RealNameController) SubmitRealName() {
 		return
 	}
 
-	err = services.UpdateUserRealNameStatus(req.UserId, true, req.Name, req.IDCard)
+	err = services.UpdateUserRealNameStatus(userId, true, req.Name, req.IDCard)
 	if err != nil {
 		c.ResponseError("实名认证成功，但更新状态失败: " + err.Error())
 		return

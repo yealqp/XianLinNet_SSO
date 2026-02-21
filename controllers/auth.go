@@ -5,6 +5,7 @@ package controllers
 
 import (
 	"fmt"
+	"strconv"
 	"time"
 
 	"github.com/oauth-server/oauth-server/models"
@@ -420,25 +421,46 @@ func (c *AuthController) ResetPassword() {
 // UpdateProfile 更新用户个人资料
 func (c *AuthController) UpdateProfile() {
 	var req struct {
-		UserId   int64  `json:"userId"`
-		Username string `json:"username"`
-		QQ       string `json:"qq"`
-		Avatar   string `json:"avatar"`
+		UserId   interface{} `json:"userId"` // 支持字符串或数字
+		Username string      `json:"username"`
+		QQ       string      `json:"qq"`
+		Avatar   string      `json:"avatar"`
 	}
 
 	err := c.GetRequestBody(&req)
 	if err != nil {
-		c.ResponseError("Invalid request body")
+		c.ResponseError("Invalid request body: " + err.Error())
 		return
 	}
 
-	if req.UserId == 0 {
+	// 解析 userId，支持字符串或数字类型
+	var userId int64
+	switch v := req.UserId.(type) {
+	case float64:
+		userId = int64(v)
+	case string:
+		parsed, err := strconv.ParseInt(v, 10, 64)
+		if err != nil {
+			c.ResponseError("Invalid userId format")
+			return
+		}
+		userId = parsed
+	case int:
+		userId = int64(v)
+	case int64:
+		userId = v
+	default:
+		c.ResponseError("Invalid userId type")
+		return
+	}
+
+	if userId == 0 {
 		c.ResponseError("用户ID不能为空")
 		return
 	}
 
 	// 获取用户
-	user, err := models.GetUserById(req.UserId)
+	user, err := models.GetUserById(userId)
 	if err != nil || user == nil {
 		c.ResponseError("用户不存在")
 		return
@@ -453,7 +475,7 @@ func (c *AuthController) UpdateProfile() {
 	user.UpdatedTime = time.Now().Format(time.RFC3339)
 
 	// 保存到数据库
-	_, err = models.UpdateUser(req.UserId, user)
+	_, err = models.UpdateUser(userId, user)
 	if err != nil {
 		c.ResponseError("更新失败: " + err.Error())
 		return
