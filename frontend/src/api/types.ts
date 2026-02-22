@@ -190,6 +190,7 @@ export interface UserInfoResponse {
   avatar?: string
   qq?: string
   is_real_name?: boolean
+  is_admin?: boolean
   roles?: string[]
   permissions?: string[]
 }

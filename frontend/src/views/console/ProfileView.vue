@@ -277,28 +277,27 @@ const updateAvatarPreview = () => {
 const loadData = async () => {
   try {
     // Fetch fresh user data from API
-    const response = await authApi.getUserInfo()
-    if (response.status === 'ok' && response.data) {
-      const user = response.data
-      // 映射后端字段到前端字段
-      formState.username = user.username || user.name || user.preferred_username || ''
-      formState.email = user.email || ''
-      formState.qq = user.qq || ''
-      formState.avatar = user.avatar || user.picture || ''
-      
-      // 更新 store，使用标准化的字段
-      const normalizedUser = {
-        id: String(user.id || user.sub || ''),
-        username: user.username || user.name || user.preferred_username || '',
-        email: user.email || '',
-        qq: user.qq || '',
-        avatar: user.avatar || user.picture || '',
-        isAdmin: (user as any).is_admin || false,
-        isRealName: user.is_real_name || false
-      }
-      authStore.userInfo = normalizedUser as any
-      storage.setUserInfo(normalizedUser)
+    // 注意：getUserInfo 现在直接返回用户信息对象，不再包裹在 ApiResponse 中
+    const user = await authApi.getUserInfo()
+    
+    // 映射后端字段到前端字段
+    formState.username = user.username || user.name || user.preferred_username || ''
+    formState.email = user.email || ''
+    formState.qq = user.qq || ''
+    formState.avatar = user.avatar || user.picture || ''
+    
+    // 更新 store，使用标准化的字段
+    const normalizedUser = {
+      id: String(user.id || user.sub || ''),
+      username: user.username || user.name || user.preferred_username || '',
+      email: user.email || '',
+      qq: user.qq || '',
+      avatar: user.avatar || user.picture || '',
+      isAdmin: (user as any).is_admin || false,
+      isRealName: user.is_real_name || false
     }
+    authStore.userInfo = normalizedUser as any
+    storage.setUserInfo(normalizedUser)
   } catch (error) {
     console.error('Failed to load user info:', error)
     // Fallback to store data if API fails

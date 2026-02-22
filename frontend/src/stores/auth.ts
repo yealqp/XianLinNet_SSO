@@ -89,20 +89,14 @@ export const useAuthStore = defineStore('auth', () => {
 
   async function fetchUserInfo() {
     try {
-      const apiResponse = await authApi.getUserInfo()
-      // 处理可能的嵌套 ApiResponse
-      let data: any
-      if ('data' in apiResponse && apiResponse.data) {
-        data = apiResponse.data
-      } else {
-        data = apiResponse
-      }
+      // getUserInfo 现在直接返回用户信息对象，不再包裹在 ApiResponse 中
+      const data = await authApi.getUserInfo()
       
       userInfo.value = {
         id: data?.sub || String(data?.id) || '',
         email: data?.email || '',
         username: data?.username || data?.name || data?.preferred_username || '',
-        isAdmin: false, // Will be determined by roles/permissions
+        isAdmin: data?.is_admin || false,
         isRealName: data?.is_real_name || false,
         qq: data?.qq || '',
         avatar: data?.picture || data?.avatar || ''
