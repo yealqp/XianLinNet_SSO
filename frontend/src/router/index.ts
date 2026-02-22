@@ -1,5 +1,6 @@
 import { createRouter, createWebHistory, type RouteRecordRaw } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
+import { topLoader } from '@/utils/topLoader'
 
 const routes: RouteRecordRaw[] = [
   {
@@ -105,6 +106,9 @@ const router = createRouter({
 })
 
 router.beforeEach(async (to, _from, next) => {
+  // 开始加载条
+  topLoader.start()
+  
   const authStore = useAuthStore()
   const requiresAuth = to.meta.requiresAuth !== false
   const requiresAdmin = to.meta.requiresAdmin === true
@@ -141,6 +145,16 @@ router.beforeEach(async (to, _from, next) => {
   }
 
   next()
+})
+
+router.afterEach(() => {
+  // 完成加载条
+  topLoader.finish()
+})
+
+router.onError(() => {
+  // 路由错误时显示失败状态
+  topLoader.fail()
 })
 
 export default router

@@ -26,11 +26,11 @@ func HandleGetUsers() fiber.Handler {
 		var err error
 
 		if owner != "" {
-			// 如果指定了 owner，只查询该 owner 的用户，按 ID 升序排序
-			err = models.GetEngine().Where("owner = ?", owner).OrderBy("id ASC").Find(&users)
+			// 如果指定了 owner，只查询该 owner 的用户，按 ID 升序排序，排除已删除的用户
+			err = models.GetEngine().Where("owner = ? AND is_deleted = ?", owner, false).OrderBy("id ASC").Find(&users)
 		} else {
-			// 否则查询所有用户，按 ID 升序排序
-			err = models.GetEngine().OrderBy("id ASC").Find(&users)
+			// 否则查询所有用户，按 ID 升序排序，排除已删除的用户
+			err = models.GetEngine().Where("is_deleted = ?", false).OrderBy("id ASC").Find(&users)
 		}
 
 		if err != nil {
@@ -77,7 +77,7 @@ func HandleGetUser() fiber.Handler {
 		if err != nil {
 			return ctx.Status(fiber.StatusInternalServerError).JSON(types.ErrorResponse("获取用户信息失败"))
 		}
-		if user == nil {
+		if user == nil || user.IsDeleted {
 			return ctx.Status(fiber.StatusNotFound).JSON(types.ErrorResponse("用户不存在"))
 		}
 
@@ -122,12 +122,12 @@ func HandleCreateUser() fiber.Handler {
 			return ctx.Status(fiber.StatusBadRequest).JSON(types.ErrorResponse("密码长度至少为6个字符"))
 		}
 
-		// 检查邮箱是否已存在
+		// 检查邮箱是否已存在（排除已删除的用户）
 		existingUser, err := models.GetUserByEmail(req.Email)
 		if err != nil {
 			return ctx.Status(fiber.StatusInternalServerError).JSON(types.ErrorResponse("检查邮箱失败"))
 		}
-		if existingUser != nil {
+		if existingUser != nil && !existingUser.IsDeleted {
 			return ctx.Status(fiber.StatusBadRequest).JSON(types.ErrorResponse("邮箱已存在"))
 		}
 
@@ -203,7 +203,7 @@ func HandleUpdateUser() fiber.Handler {
 		if err != nil {
 			return ctx.Status(fiber.StatusInternalServerError).JSON(types.ErrorResponse("获取用户信息失败"))
 		}
-		if user == nil {
+		if user == nil || user.IsDeleted {
 			return ctx.Status(fiber.StatusNotFound).JSON(types.ErrorResponse("用户不存在"))
 		}
 
@@ -215,12 +215,12 @@ func HandleUpdateUser() fiber.Handler {
 			user.Username = req.Username
 		}
 		if req.Email != "" {
-			// 检查新邮箱是否已被其他用户使用
+			// 检查新邮箱是否已被其他用户使用（排除已删除的用户）
 			existingUser, err := models.GetUserByEmail(req.Email)
 			if err != nil {
 				return ctx.Status(fiber.StatusInternalServerError).JSON(types.ErrorResponse("检查邮箱失败"))
 			}
-			if existingUser != nil && existingUser.Id != id {
+			if existingUser != nil && existingUser.Id != id && !existingUser.IsDeleted {
 				return ctx.Status(fiber.StatusBadRequest).JSON(types.ErrorResponse("邮箱已被其他用户使用"))
 			}
 			user.Email = req.Email
@@ -278,8 +278,13 @@ func HandleDeleteUser() fiber.Handler {
 		if err != nil {
 			return ctx.Status(fiber.StatusInternalServerError).JSON(types.ErrorResponse("获取用户信息失败"))
 		}
-		if user == nil {
+		if user == nil || user.IsDeleted {
 			return ctx.Status(fiber.StatusNotFound).JSON(types.ErrorResponse("用户不存在"))
+		}
+
+		// 不能删除管理员
+		if user.IsAdmin {
+			return ctx.Status(fiber.StatusBadRequest).JSON(types.ErrorResponse("不能删除管理员账户"))
 		}
 
 		// 标记为已删除（软删除）
@@ -626,9 +631,9 @@ func HandleRevokeUserTokens() fiber.Handler {
 // Requirements: 8.12
 func HandleGetStats() fiber.Handler {
 	return func(ctx *fiber.Ctx) error {
-		// 统计用户数
+		// 统计用户数（排除已删除的用户）
 		var userCount int64
-		userCount, err := models.GetEngine().Count(&models.User{})
+		userCount, err := models.GetEngine().Where("is_deleted = ?", false).Count(&models.User{})
 		if err != nil {
 			return ctx.Status(fiber.StatusInternalServerError).JSON(types.ErrorResponse("统计用户数失败"))
 		}
@@ -727,7 +732,7 @@ func HandleBanUser() fiber.Handler {
 		if err != nil {
 			return ctx.Status(fiber.StatusInternalServerError).JSON(types.ErrorResponse("获取用户信息失败"))
 		}
-		if user == nil {
+		if user == nil || user.IsDeleted {
 			return ctx.Status(fiber.StatusNotFound).JSON(types.ErrorResponse("用户不存在"))
 		}
 
@@ -773,7 +778,7 @@ func HandleUnbanUser() fiber.Handler {
 		if err != nil {
 			return ctx.Status(fiber.StatusInternalServerError).JSON(types.ErrorResponse("获取用户信息失败"))
 		}
-		if user == nil {
+		if user == nil || user.IsDeleted {
 			return ctx.Status(fiber.StatusNotFound).JSON(types.ErrorResponse("用户不存在"))
 		}
 

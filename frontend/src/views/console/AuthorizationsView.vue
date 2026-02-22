@@ -339,6 +339,23 @@ onMounted(() => {
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
 }
 
+/* 自定义选项卡颜色为主色调 */
+.auth-tabs :deep(.ant-tabs-tab.ant-tabs-tab-active .ant-tabs-tab-btn) {
+  color: #ec4899;
+}
+
+.auth-tabs :deep(.ant-tabs-ink-bar) {
+  background: #ec4899;
+}
+
+.auth-tabs :deep(.ant-tabs-tab:hover) {
+  color: #ec4899;
+}
+
+.auth-tabs :deep(.ant-tabs-tab-btn:hover) {
+  color: #ec4899;
+}
+
 /* 空状态 */
 .empty-state {
   text-align: center;
