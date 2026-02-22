@@ -14,7 +14,8 @@ import (
 // 按照执行顺序注册：CORS -> Compress -> Logger -> Recovery
 func RegisterMiddlewares(app *fiber.App) {
 	// CORS 中间件 - 处理跨域请求
-	app.Use(middlewares.CORSMiddleware())
+	// 注意：CORS 已在 nginx 层处理，这里不再重复添加以避免 CORS 头重复
+	// app.Use(middlewares.CORSMiddleware())
 
 	// Compress 中间件 - 响应压缩（对大于 1KB 的响应启用 gzip）
 	app.Use(middlewares.CompressMiddleware())
