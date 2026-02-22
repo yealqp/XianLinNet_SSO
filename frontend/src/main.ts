@@ -1,6 +1,5 @@
 import { createApp } from 'vue'
 import { createPinia } from 'pinia'
-import Antd from 'ant-design-vue'
 import 'ant-design-vue/dist/reset.css'
 import router from './router'
 import App from './App.vue'
@@ -11,7 +10,6 @@ const pinia = createPinia()
 
 app.use(pinia)
 app.use(router)
-app.use(Antd)
 
 app.config.errorHandler = (err, _, info) => {
   console.error('Global error:', err, info)
