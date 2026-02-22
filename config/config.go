@@ -90,8 +90,9 @@ type AppConfig struct {
 	LogLevel         string
 	Origin           string
 	OriginFrontend   string
-	VerifyAPIURL     string
 	VerifyAPIEnabled bool
+	IDCardAPIURL     string
+	IDCardAppCode    string
 }
 
 // LoadConfig 从环境变量加载配置
@@ -154,8 +155,9 @@ func LoadConfig() (*Config, error) {
 			LogLevel:         getEnv("LOG_LEVEL", "info"),
 			Origin:           getEnv("ORIGIN", "http://localhost:8080"),
 			OriginFrontend:   getEnv("ORIGIN_FRONTEND", "http://localhost:8080"),
-			VerifyAPIURL:     getEnv("VERIFY_API_URL", ""),
 			VerifyAPIEnabled: getBoolEnv("VERIFY_API_ENABLED", false),
+			IDCardAPIURL:     getEnv("IDCARD_API_URL", "https://sfzsmyxb.market.alicloudapi.com/get/idcard/checkV3"),
+			IDCardAppCode:    getEnv("IDCARD_APP_CODE", ""),
 		},
 	}, nil
 }

@@ -377,19 +377,15 @@ onMounted(() => {
 .page-title {
   font-size: 32px;
   font-weight: 700;
-  color: #1E293B;
+  color: #1f1f1f;
   margin: 0 0 8px 0;
   display: flex;
   align-items: center;
-  background: linear-gradient(135deg, #2563EB 0%, #3B82F6 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
 }
 
 .page-title .title-icon {
   margin-right: 12px;
-  color: #2563EB;
+  color: #ec4899;
 }
 
 .page-subtitle {
@@ -413,7 +409,7 @@ onMounted(() => {
 .avatar-card:hover,
 .status-card:hover,
 .form-card:hover {
-  box-shadow: 0 8px 24px rgba(37, 99, 235, 0.08), 0 2px 6px rgba(37, 99, 235, 0.04);
+  box-shadow: 0 8px 24px rgba(236, 72, 153, 0.08), 0 2px 6px rgba(236, 72, 153, 0.04);
 }
 
 .card-title {
@@ -426,7 +422,7 @@ onMounted(() => {
 
 .card-title .title-icon {
   margin-right: 8px;
-  color: #2563EB;
+  color: #ec4899;
 }
 
 /* 头像卡片 */
@@ -442,8 +438,8 @@ onMounted(() => {
 }
 
 .main-avatar {
-  border: 4px solid #F1F5F9;
-  box-shadow: 0 4px 16px rgba(37, 99, 235, 0.15);
+  border: 4px solid #fce7f3;
+  box-shadow: 0 4px 16px rgba(236, 72, 153, 0.15);
 }
 
 .avatar-badge {
@@ -536,13 +532,13 @@ onMounted(() => {
 }
 
 .form-input:hover {
-  border-color: #3B82F6;
+  border-color: #f472b6;
 }
 
 .form-input:focus,
 .form-input:focus-within {
-  border-color: #2563EB;
-  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+  border-color: #ec4899;
+  box-shadow: 0 0 0 3px rgba(236, 72, 153, 0.1);
 }
 
 .input-icon {
@@ -564,15 +560,15 @@ onMounted(() => {
   display: flex;
   align-items: center;
   padding: 20px;
-  background: linear-gradient(135deg, #EFF6FF 0%, #DBEAFE 100%);
+  background: linear-gradient(135deg, #fdf2f8 0%, #fce7f3 100%);
   border-radius: 16px;
   gap: 20px;
-  border: 1px solid #BFDBFE;
+  border: 1px solid #fbcfe8;
 }
 
 .preview-avatar {
   border: 3px solid #ffffff;
-  box-shadow: 0 2px 8px rgba(37, 99, 235, 0.15);
+  box-shadow: 0 2px 8px rgba(236, 72, 153, 0.15);
 }
 
 .preview-info {
@@ -588,7 +584,7 @@ onMounted(() => {
 
 .preview-source {
   font-size: 13px;
-  color: #2563EB;
+  color: #ec4899;
 }
 
 /* 操作按钮 */
@@ -599,19 +595,19 @@ onMounted(() => {
 }
 
 .submit-btn {
-  background: linear-gradient(135deg, #2563EB 0%, #3B82F6 100%);
+  background: linear-gradient(135deg, #ec4899 0%, #f472b6 100%);
   border: none;
   font-weight: 500;
   height: 48px;
   padding: 0 32px;
   border-radius: 12px;
-  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2);
+  box-shadow: 0 4px 12px rgba(236, 72, 153, 0.2);
 }
 
 .submit-btn:hover {
-  background: linear-gradient(135deg, #1d4ed8 0%, #2563EB 100%);
+  background: linear-gradient(135deg, #db2777 0%, #ec4899 100%);
   transform: translateY(-1px);
-  box-shadow: 0 6px 16px rgba(37, 99, 235, 0.3);
+  box-shadow: 0 6px 16px rgba(236, 72, 153, 0.3);
 }
 
 .reset-btn {
@@ -622,8 +618,8 @@ onMounted(() => {
 }
 
 .reset-btn:hover {
-  border-color: #3B82F6;
-  color: #2563EB;
+  border-color: #f472b6;
+  color: #ec4899;
 }
 
 /* 深度样式覆盖 */

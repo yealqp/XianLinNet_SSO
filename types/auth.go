@@ -18,9 +18,10 @@ type LoginResponse struct {
 
 // RegisterRequest 注册请求
 type RegisterRequest struct {
-	Username string `json:"username" validate:"required,min=3,max=50"`
-	Password string `json:"password" validate:"required,min=6"`
-	Email    string `json:"email" validate:"required,email"`
+	Username         string `json:"username" validate:"required,min=3,max=50"`
+	Password         string `json:"password" validate:"required,min=6"`
+	Email            string `json:"email" validate:"required,email"`
+	VerificationCode string `json:"verificationCode" validate:"required"`
 }
 
 // UserInfo 用户信息

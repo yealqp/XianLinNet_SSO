@@ -4,48 +4,53 @@
   line-height: 1.5;
   font-weight: 400;
 
-  /* 设计系统变量 - 基于 UI/UX Pro Max */
-  /* 主色调 - SaaS 蓝色系 */
-  --color-primary: #2563EB;
-  --color-primary-light: #3B82F6;
-  --color-primary-lighter: #60A5FA;
-  --color-primary-dark: #1d4ed8;
+  /* 设计系统变量 - 粉色主色调 */
+  /* 主色调 - 粉色系 */
+  --color-primary: #ec4899;
+  --color-primary-light: #f472b6;
+  --color-primary-lighter: #f9a8d4;
+  --color-primary-dark: #db2777;
+  --color-primary-darker: #be185d;
   
   /* 辅助色 */
-  --color-secondary: #3B82F6;
-  --color-accent: #F97316;
+  --color-secondary: #f472b6;
+  --color-accent: #ec4899;
   
   /* 中性色 */
-  --color-bg-base: #F8FAFC;
-  --color-bg-elevated: #FFFFFF;
-  --color-text-primary: #1E293B;
-  --color-text-secondary: #64748B;
-  --color-text-tertiary: #94A3B8;
-  --color-border: #E2E8F0;
-  --color-border-light: #F1F5F9;
+  --color-bg-base: #ffffff;
+  --color-bg-elevated: #ffffff;
+  --color-text-primary: #1f1f1f;
+  --color-text-secondary: #666666;
+  --color-text-tertiary: #999999;
+  --color-border: #e5e7eb;
+  --color-border-light: #f3f4f6;
   
   /* 语义色 */
-  --color-success: #10B981;
-  --color-success-light: #34D399;
-  --color-warning: #F59E0B;
-  --color-warning-light: #FBBF24;
-  --color-error: #EF4444;
-  --color-error-light: #F87171;
-  --color-info: #3B82F6;
-  --color-info-light: #60A5FA;
+  --color-success: #10b981;
+  --color-success-light: #34d399;
+  --color-warning: #f59e0b;
+  --color-warning-light: #fbbf24;
+  --color-error: #ef4444;
+  --color-error-light: #f87171;
+  --color-info: #3b82f6;
+  --color-info-light: #60a5fa;
   
   /* 圆角 - Bento Grid 风格 */
-  --radius-sm: 8px;
-  --radius-md: 12px;
-  --radius-lg: 16px;
-  --radius-xl: 20px;
-  --radius-2xl: 24px;
+  --radius-sm: 6px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-xl: 16px;
+  --radius-2xl: 20px;
   
   /* 阴影 - Soft UI Evolution */
   --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.04);
-  --shadow-md: 0 2px 8px rgba(0, 0, 0, 0.04), 0 1px 2px rgba(0, 0, 0, 0.06);
-  --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.08), 0 2px 6px rgba(0, 0, 0, 0.04);
-  --shadow-xl: 0 12px 28px rgba(0, 0, 0, 0.12), 0 2px 6px rgba(0, 0, 0, 0.08);
+  --shadow-md: 0 2px 8px rgba(0, 0, 0, 0.08);
+  --shadow-lg: 0 4px 12px rgba(0, 0, 0, 0.08);
+  --shadow-xl: 0 8px 24px rgba(0, 0, 0, 0.12);
+  
+  /* 粉色阴影 */
+  --shadow-primary: 0 2px 8px rgba(236, 72, 153, 0.15);
+  --shadow-primary-lg: 0 4px 12px rgba(236, 72, 153, 0.2);
   
   /* 间距系统 */
   --spacing-xs: 4px;
@@ -86,13 +91,13 @@
 /* 暗色模式变量 */
 @media (prefers-color-scheme: dark) {
   :root {
-    --color-bg-base: #0F172A;
-    --color-bg-elevated: #1E293B;
-    --color-text-primary: #F8FAFC;
-    --color-text-secondary: #CBD5E1;
-    --color-text-tertiary: #94A3B8;
+    --color-bg-base: #0f172a;
+    --color-bg-elevated: #1e293b;
+    --color-text-primary: #f8fafc;
+    --color-text-secondary: #cbd5e1;
+    --color-text-tertiary: #94a3b8;
     --color-border: #334155;
-    --color-border-light: #1E293B;
+    --color-border-light: #1e293b;
     
     color-scheme: dark;
   }
@@ -166,22 +171,31 @@ h3 {
   background: var(--color-text-tertiary);
 }
 
-/* Ant Design 全局样式覆盖 */
+/* Ant Design 全局样式覆盖 - 粉色主题 */
 .ant-btn-primary {
   background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-light) 100%);
   border: none;
-  box-shadow: var(--shadow-md);
+  box-shadow: var(--shadow-primary);
 }
 
 .ant-btn-primary:hover {
   background: linear-gradient(135deg, var(--color-primary-dark) 0%, var(--color-primary) 100%);
-  box-shadow: var(--shadow-lg);
+  box-shadow: var(--shadow-primary-lg);
+}
+
+.ant-btn-link {
+  color: var(--color-primary);
+}
+
+.ant-btn-link:hover {
+  color: var(--color-primary-light);
 }
 
 .ant-card {
-  border-radius: var(--radius-xl);
+  border-radius: var(--radius-md);
   box-shadow: var(--shadow-md);
   border: 1px solid var(--color-border-light);
+  background: #ffffff;
 }
 
 .ant-input,
@@ -199,7 +213,99 @@ h3 {
 .ant-input-affix-wrapper:focus,
 .ant-input-affix-wrapper-focused {
   border-color: var(--color-primary);
-  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.1);
+  box-shadow: 0 0 0 2px rgba(236, 72, 153, 0.1);
+}
+
+/* Tag 粉色主题 */
+.ant-tag {
+  border-radius: 6px;
+  font-weight: 500;
+}
+
+.ant-tag-pink,
+.ant-tag-success {
+  background: #fdf2f8;
+  border-color: #fbcfe8;
+  color: var(--color-primary);
+}
+
+.ant-tag-blue {
+  background: #eff6ff;
+  border-color: #dbeafe;
+  color: #3b82f6;
+}
+
+.ant-tag-green {
+  background: #f0fdf4;
+  border-color: #bbf7d0;
+  color: #10b981;
+}
+
+.ant-tag-orange {
+  background: #fff7ed;
+  border-color: #fed7aa;
+  color: #f59e0b;
+}
+
+/* Badge 粉色主题 */
+.ant-badge-status-success {
+  background-color: var(--color-success);
+}
+
+.ant-badge-status-processing {
+  background-color: var(--color-primary);
+}
+
+.ant-badge-status-default {
+  background-color: #d1d5db;
+}
+
+.ant-badge-status-error {
+  background-color: var(--color-error);
+}
+
+.ant-badge-status-warning {
+  background-color: var(--color-warning);
+}
+
+/* Alert 粉色主题 */
+.ant-alert-info {
+  background: #f0f9ff;
+  border-color: #bae6fd;
+}
+
+.ant-alert-success {
+  background: #fdf2f8;
+  border-color: #fbcfe8;
+}
+
+.ant-alert-warning {
+  background: #fef3f2;
+  border-color: #fecaca;
+}
+
+/* Menu 粉色主题 */
+.ant-menu-item-selected {
+  color: var(--color-primary) !important;
+  background: #fdf2f8 !important;
+}
+
+.ant-menu-item:hover {
+  color: var(--color-primary) !important;
+}
+
+.ant-menu-submenu-selected > .ant-menu-submenu-title {
+  color: var(--color-primary) !important;
+}
+
+/* Dropdown 粉色主题 */
+.ant-dropdown-menu-item:hover {
+  background: #fdf2f8;
+}
+
+.ant-dropdown-menu-item-selected {
+  color: var(--color-primary);
+  background: #fdf2f8;
 }
 
 /* 响应式工具类 */

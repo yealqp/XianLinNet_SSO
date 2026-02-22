@@ -49,6 +49,11 @@ export const authApi = {
     return response.data
   },
 
+  async getRealNameInfo() {
+    const response = await apiClient.get<ApiResponse<{ isRealName: boolean; name?: string; idcard?: string }>>('/realname/verify')
+    return response.data
+  },
+
   async updateProfile(data: { userId: string | number; username: string; qq: string; avatar: string }) {
     const response = await apiClient.post<ApiResponse<{ message: string; user: any }>>('/auth/update-profile', data)
     return response.data

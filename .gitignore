@@ -14,7 +14,7 @@ oauth-server
 .shared
 # Dependency directories
 vendor/
-
+1.py
 # Go workspace file
 go.work
 

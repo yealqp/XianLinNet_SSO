@@ -167,6 +167,7 @@ const handleLogout = async () => {
 .console-layout {
   min-height: 100vh;
   width: 100%;
+  background: #ffffff;
 }
 
 .console-sider {
@@ -177,6 +178,59 @@ const handleLogout = async () => {
   top: 0;
   bottom: 0;
   z-index: 100;
+  background: #ffffff !important;
+  box-shadow: 2px 0 8px rgba(0, 0, 0, 0.05);
+}
+
+/* 覆盖 Ant Design 侧栏暗色主题 */
+.console-sider :deep(.ant-layout-sider-children) {
+  background: #ffffff;
+}
+
+.console-sider :deep(.ant-menu-dark) {
+  background: #ffffff;
+}
+
+.console-sider :deep(.ant-menu-dark .ant-menu-item) {
+  color: #666666;
+  background: transparent;
+}
+
+.console-sider :deep(.ant-menu-dark .ant-menu-item:hover) {
+  color: #ec4899;
+  background: #fdf2f8;
+}
+
+.console-sider :deep(.ant-menu-dark .ant-menu-item-selected) {
+  color: #ec4899;
+  background: linear-gradient(90deg, #fdf2f8 0%, #fce7f3 100%);
+  border-right: 3px solid #ec4899;
+  font-weight: 600;
+}
+
+.console-sider :deep(.ant-menu-dark .ant-menu-submenu-title) {
+  color: #666666;
+}
+
+.console-sider :deep(.ant-menu-dark .ant-menu-submenu-title:hover) {
+  color: #ec4899;
+  background: #fdf2f8;
+}
+
+.console-sider :deep(.ant-menu-dark .ant-menu-submenu-selected > .ant-menu-submenu-title) {
+  color: #ec4899;
+}
+
+.console-sider :deep(.ant-menu-dark .ant-menu-item-selected .anticon) {
+  color: #ec4899;
+}
+
+.console-sider :deep(.ant-menu-dark .ant-menu-submenu-open) {
+  color: #ec4899;
+}
+
+.console-sider :deep(.ant-menu-dark .ant-menu-sub) {
+  background: #fafafa;
 }
 
 .logo {
@@ -184,11 +238,12 @@ const handleLogout = async () => {
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #fff;
+  color: #ec4899;
   font-size: 20px;
   font-weight: bold;
-  background: rgba(255, 255, 255, 0.1);
+  background: linear-gradient(135deg, #fdf2f8 0%, #fce7f3 100%);
   white-space: nowrap;
+  border-bottom: 1px solid #fbcfe8;
 }
 
 .console-header {
@@ -197,11 +252,12 @@ const handleLogout = async () => {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
   z-index: 1;
   position: sticky;
   top: 0;
   margin-left: 200px;
+  border-bottom: 1px solid #f3f4f6;
 }
 
 .console-header.collapsed {
@@ -217,10 +273,11 @@ const handleLogout = async () => {
   font-size: 18px;
   cursor: pointer;
   transition: color 0.3s;
+  color: #666666;
 }
 
 .trigger:hover {
-  color: #f6339a;
+  color: #ec4899;
 }
 
 .header-right {
@@ -232,18 +289,27 @@ const handleLogout = async () => {
   display: flex;
   align-items: center;
   cursor: pointer;
+  padding: 8px 12px;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+}
+
+.user-info:hover {
+  background: #fdf2f8;
 }
 
 .username {
   margin-left: 8px;
   white-space: nowrap;
+  color: #1f1f1f;
+  font-weight: 500;
 }
 
 .console-content {
   margin: 16px;
   margin-left: 216px;
   padding: 24px;
-  background: #fff;
+  background: #ffffff;
   min-height: calc(100vh - 112px);
   border-radius: 8px;
 }

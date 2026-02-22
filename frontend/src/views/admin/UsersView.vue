@@ -103,19 +103,33 @@
       title="实名信息"
       :footer="null"
       @cancel="realNameModalVisible = false"
+      width="500px"
     >
       <a-spin :spinning="realNameLoading">
-        <a-descriptions bordered :column="1">
-          <a-descriptions-item label="用户名">
-            {{ currentRealNameUser?.username }}
-          </a-descriptions-item>
-          <a-descriptions-item label="真实姓名">
-            {{ realNameInfo.name || '-' }}
-          </a-descriptions-item>
-          <a-descriptions-item label="身份证号">
-            {{ realNameInfo.idcard || '-' }}
-          </a-descriptions-item>
-        </a-descriptions>
+        <div class="realname-modal-content">
+          <a-descriptions bordered :column="1" size="middle">
+            <a-descriptions-item label="用户名">
+              <span class="info-value">{{ currentRealNameUser?.username }}</span>
+            </a-descriptions-item>
+            <a-descriptions-item label="邮箱">
+              <span class="info-value">{{ currentRealNameUser?.email }}</span>
+            </a-descriptions-item>
+            <a-descriptions-item label="真实姓名">
+              <span class="info-value highlight">{{ realNameInfo.name || '-' }}</span>
+            </a-descriptions-item>
+            <a-descriptions-item label="身份证号">
+              <span class="info-value highlight">{{ realNameInfo.idcard || '-' }}</span>
+            </a-descriptions-item>
+          </a-descriptions>
+          
+          <a-alert
+            message="敏感信息提示"
+            description="实名信息属于敏感数据，请妥善保管，不要泄露给他人。"
+            type="warning"
+            show-icon
+            style="margin-top: 16px;"
+          />
+        </div>
       </a-spin>
     </a-modal>
   </div>
@@ -330,5 +344,30 @@ onMounted(() => {
   font-weight: 600;
   color: #1f1f1f;
   margin: 0;
+}
+
+/* 实名信息模态框样式 */
+.realname-modal-content {
+  padding: 8px 0;
+}
+
+.info-value {
+  font-weight: 500;
+  color: #1f1f1f;
+}
+
+.info-value.highlight {
+  color: #ec4899;
+  font-weight: 600;
+  font-size: 15px;
+}
+
+:deep(.ant-descriptions-item-label) {
+  font-weight: 600;
+  background: #fafafa;
+}
+
+:deep(.ant-descriptions-item-content) {
+  background: #ffffff;
 }
 </style>

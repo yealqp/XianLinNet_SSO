@@ -1,92 +1,110 @@
 <template>
-  <div class="user-dashboard">
-    <div class="dashboard-header">
-      <h2 class="page-title">欢迎回来，{{ userInfo?.username }}</h2>
-      <p class="page-subtitle">管理你的账户和偏好设置</p>
+  <div :class="styles.container">
+    <!-- 页面标题 -->
+    <div :class="styles.pageHeader">
+      <h1 :class="styles.pageTitle">首页</h1>
     </div>
-    
-    <div class="bento-grid">
-      <!-- 个人信息卡片 -->
-      <div class="bento-card profile-card">
-        <div class="card-header">
-          <div class="card-icon">
+
+    <!-- 通知卡片 - 仅显示未实名认证提示 -->
+    <div :class="styles.noticeCards" v-if="!userInfo?.isRealName">
+      <div :class="[styles.noticeCard, styles.noticeWarning]">
+        <div :class="[styles.noticeIcon, styles.noticeIconWarning]">
+          <ExclamationCircleOutlined />
+        </div>
+        <div :class="styles.noticeContent">
+          <div :class="styles.noticeTitle">注意！</div>
+          <div :class="styles.noticeText">实名认证后可使用所有功能，请尽快完成实名认证</div>
+        </div>
+        <div :class="styles.noticeAction">
+          <a-button type="link" size="small" @click="$router.push('/console/realname')">去认证</a-button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 统计卡片网格 -->
+    <div :class="styles.statsGrid">
+      <div :class="styles.statCard">
+        <div :class="styles.statIconWrapper">
+          <div :class="[styles.statIcon, styles.statIconPrimary]">
             <UserOutlined />
           </div>
-          <h3 class="card-title">个人信息</h3>
         </div>
-        <div class="card-content">
-          <div class="info-item">
-            <span class="info-label">邮箱</span>
-            <span class="info-value">{{ userInfo?.email }}</span>
-          </div>
-          <div class="info-item">
-            <span class="info-label">显示名称</span>
-            <span class="info-value">{{ userInfo?.username }}</span>
-          </div>
-          <div class="info-item">
-            <span class="info-label">账户状态</span>
-            <span class="info-value">
-              <a-badge status="success" text="正常" />
-            </span>
-          </div>
+        <div :class="styles.statInfo">
+          <div :class="styles.statLabel">用户信息</div>
+          <div :class="styles.statValue">{{ userInfo?.username }}</div>
         </div>
-        <div class="card-footer">
-          <a-button type="primary" @click="$router.push('/console/profile')" class="action-btn">
-            <EditOutlined />
-            编辑个人资料
-          </a-button>
+        <div :class="styles.statBadge">
+          <a-tag color="pink">正常</a-tag>
         </div>
       </div>
 
-      <!-- 快速操作卡片 -->
-      <div class="bento-card actions-card">
-        <div class="card-header">
-          <div class="card-icon">
+      <div :class="styles.statCard">
+        <div :class="styles.statIconWrapper">
+          <div :class="[styles.statIcon, styles.statIconSuccess]">
             <ThunderboltOutlined />
           </div>
-          <h3 class="card-title">快速操作</h3>
         </div>
-        <div class="card-content">
-          <div class="action-grid">
-            <button class="quick-action-btn" @click="$router.push('/console/profile')">
-              <div class="action-icon">
-                <UserOutlined />
-              </div>
-              <span class="action-text">个人资料</span>
-            </button>
-            <button class="quick-action-btn" @click="handleChangePassword">
-              <div class="action-icon">
-                <LockOutlined />
-              </div>
-              <span class="action-text">修改密码</span>
-            </button>
-            <button class="quick-action-btn" @click="$router.push('/console/realname')">
-              <div class="action-icon">
-                <SafetyOutlined />
-              </div>
-              <span class="action-text">实名认证</span>
-            </button>
-            <button class="quick-action-btn" @click="handleLogout">
-              <div class="action-icon">
-                <LogoutOutlined />
-              </div>
-              <span class="action-text">退出登录</span>
-            </button>
+        <div :class="styles.statInfo">
+          <div :class="styles.statLabel">账户状态</div>
+          <div :class="styles.statValue">
+            <a-badge status="success" text="活跃" />
           </div>
         </div>
       </div>
 
-      <!-- 最近活动卡片 -->
-      <div class="bento-card activity-card">
-        <div class="card-header">
-          <div class="card-icon">
-            <ClockCircleOutlined />
+      <div :class="styles.statCard">
+        <div :class="styles.statIconWrapper">
+          <div :class="[styles.statIcon, styles.statIconWarning]">
+            <SafetyOutlined />
           </div>
-          <h3 class="card-title">最近活动</h3>
         </div>
-        <div class="card-content">
-          <a-empty description="暂无活动记录" :image="Empty.PRESENTED_IMAGE_SIMPLE" />
+        <div :class="styles.statInfo">
+          <div :class="styles.statLabel">实名认证 / 可用功能</div>
+          <div :class="styles.statValue">{{ userInfo?.isRealName ? '已认证' : '未认证' }}</div>
         </div>
+      </div>
+
+      <div :class="styles.statCard">
+        <div :class="styles.statIconWrapper">
+          <div :class="[styles.statIcon, styles.statIconInfo]">
+            <LinkOutlined />
+          </div>
+        </div>
+        <div :class="styles.statInfo">
+          <div :class="styles.statLabel">关联账号</div>
+          <div :class="styles.statValue">0</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 快速操作区域 -->
+    <div :class="styles.quickActionsSection">
+      <h3 :class="styles.sectionTitle">快速操作</h3>
+      <div :class="styles.quickActionsGrid">
+        <button :class="[styles.quickActionItem, 'quick-action-item']" @click="$router.push('/console/profile')">
+          <div :class="styles.actionIconWrapper">
+            <UserOutlined />
+          </div>
+          <span :class="styles.actionLabel">个人资料</span>
+        </button>
+        <button :class="[styles.quickActionItem, 'quick-action-item']" @click="handleChangePassword">
+          <div :class="styles.actionIconWrapper">
+            <LockOutlined />
+          </div>
+          <span :class="styles.actionLabel">修改密码</span>
+        </button>
+        <button :class="[styles.quickActionItem, 'quick-action-item']" @click="$router.push('/console/realname')">
+          <div :class="styles.actionIconWrapper">
+            <SafetyOutlined />
+          </div>
+          <span :class="styles.actionLabel">实名认证</span>
+        </button>
+        <button :class="[styles.quickActionItem, 'quick-action-item']" @click="handleLogout">
+          <div :class="styles.actionIconWrapper">
+            <LogoutOutlined />
+          </div>
+          <span :class="styles.actionLabel">退出登录</span>
+        </button>
       </div>
     </div>
   </div>
@@ -96,16 +114,18 @@
 import { computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
+import { css } from '@emotion/css'
+import { theme, mq, gradients } from '@/styles/theme'
 import { 
   UserOutlined, 
-  LockOutlined, 
-  EditOutlined,
+  LockOutlined,
   ThunderboltOutlined,
   SafetyOutlined,
   LogoutOutlined,
-  ClockCircleOutlined
+  ExclamationCircleOutlined,
+  LinkOutlined
 } from '@ant-design/icons-vue'
-import { message, Empty } from 'ant-design-vue'
+import { message } from 'ant-design-vue'
 
 const router = useRouter()
 const authStore = useAuthStore()
@@ -120,248 +140,271 @@ const handleLogout = () => {
   router.push('/auth/login')
   message.success('已退出登录')
 }
+
+// Emotion CSS 样式
+const styles = {
+  container: css({
+    padding: 0,
+    maxWidth: '1200px',
+  }),
+  
+  pageHeader: css({
+    marginBottom: theme.spacing['2xl'],
+  }),
+  
+  pageTitle: css({
+    fontSize: theme.fontSize['3xl'],
+    fontWeight: theme.fontWeight.semibold,
+    color: theme.colors.textPrimary,
+    margin: 0,
+  }),
+  
+  noticeCards: css({
+    display: 'flex',
+    flexDirection: 'column',
+    gap: theme.spacing.md,
+    marginBottom: theme.spacing['2xl'],
+  }),
+  
+  noticeCard: css({
+    display: 'flex',
+    alignItems: 'center',
+    gap: theme.spacing.md,
+    padding: theme.spacing.lg,
+    borderRadius: theme.radius.md,
+    background: theme.colors.white,
+    border: `1px solid`,
+    transition: `all ${theme.transition.base}`,
+    '&:hover': {
+      boxShadow: theme.shadows.md,
+    },
+  }),
+  
+  noticeInfo: css({
+    background: theme.colors.noticeInfoBg,
+    borderColor: theme.colors.noticeInfoBorder,
+  }),
+  
+  noticeWarning: css({
+    background: theme.colors.noticeWarningBg,
+    borderColor: theme.colors.noticeWarningBorder,
+  }),
+  
+  noticeIcon: css({
+    width: '40px',
+    height: '40px',
+    borderRadius: theme.radius.full,
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    fontSize: theme.fontSize['3xl'],
+    flexShrink: 0,
+  }),
+  
+  noticeIconInfo: css({
+    background: '#e0f2fe',
+    color: theme.colors.noticeInfoIcon,
+  }),
+  
+  noticeIconWarning: css({
+    background: '#fee2e2',
+    color: theme.colors.noticeWarningIcon,
+  }),
+  
+  noticeContent: css({
+    flex: 1,
+  }),
+  
+  noticeTitle: css({
+    fontSize: theme.fontSize.base,
+    fontWeight: theme.fontWeight.semibold,
+    color: theme.colors.textPrimary,
+    marginBottom: '4px',
+  }),
+  
+  noticeText: css({
+    fontSize: theme.fontSize.sm,
+    color: theme.colors.textSecondary,
+    lineHeight: 1.5,
+  }),
+  
+  noticeAction: css({
+    flexShrink: 0,
+  }),
+  
+  statsGrid: css({
+    display: 'grid',
+    gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))',
+    gap: theme.spacing.lg,
+    marginBottom: theme.spacing['3xl'],
+    [mq.md]: {
+      gridTemplateColumns: 'repeat(2, 1fr)',
+      gap: theme.spacing.md,
+    },
+    [mq.xs]: {
+      gridTemplateColumns: '1fr',
+    },
+  }),
+  
+  statCard: css({
+    background: theme.colors.white,
+    border: `1px solid ${theme.colors.border}`,
+    borderRadius: theme.radius.md,
+    padding: theme.spacing.xl,
+    display: 'flex',
+    alignItems: 'center',
+    gap: theme.spacing.lg,
+    transition: `all ${theme.transition.base}`,
+    position: 'relative',
+    overflow: 'hidden',
+    '&:hover': {
+      boxShadow: theme.shadows.lg,
+      transform: 'translateY(-2px)',
+    },
+    [mq.md]: {
+      padding: theme.spacing.lg,
+    },
+  }),
+  
+  statIconWrapper: css({
+    flexShrink: 0,
+  }),
+  
+  statIcon: css({
+    width: '48px',
+    height: '48px',
+    borderRadius: theme.radius.full,
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    fontSize: theme.fontSize['3xl'],
+    color: theme.colors.white,
+    [mq.md]: {
+      width: '40px',
+      height: '40px',
+      fontSize: theme.fontSize['2xl'],
+    },
+  }),
+  
+  statIconPrimary: css({
+    background: gradients.primary,
+  }),
+  
+  statIconSuccess: css({
+    background: gradients.success,
+  }),
+  
+  statIconWarning: css({
+    background: gradients.warning,
+  }),
+  
+  statIconInfo: css({
+    background: gradients.info,
+  }),
+  
+  statInfo: css({
+    flex: 1,
+    minWidth: 0,
+  }),
+  
+  statLabel: css({
+    fontSize: theme.fontSize.sm,
+    color: theme.colors.gray500,
+    marginBottom: '6px',
+    whiteSpace: 'nowrap',
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
+  }),
+  
+  statValue: css({
+    fontSize: theme.fontSize['2xl'],
+    fontWeight: theme.fontWeight.semibold,
+    color: theme.colors.textPrimary,
+    whiteSpace: 'nowrap',
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
+    [mq.md]: {
+      fontSize: theme.fontSize.xl,
+    },
+  }),
+  
+  statBadge: css({
+    flexShrink: 0,
+  }),
+  
+  quickActionsSection: css({
+    marginTop: theme.spacing['3xl'],
+  }),
+  
+  sectionTitle: css({
+    fontSize: theme.fontSize.xl,
+    fontWeight: theme.fontWeight.semibold,
+    color: theme.colors.textPrimary,
+    margin: `0 0 ${theme.spacing.lg} 0`,
+  }),
+  
+  quickActionsGrid: css({
+    display: 'grid',
+    gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))',
+    gap: theme.spacing.md,
+    [mq.md]: {
+      gridTemplateColumns: 'repeat(2, 1fr)',
+    },
+  }),
+  
+  quickActionItem: css({
+    background: theme.colors.white,
+    border: `1px solid ${theme.colors.border}`,
+    borderRadius: theme.radius.md,
+    padding: `${theme.spacing.xl} ${theme.spacing.lg}`,
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    gap: theme.spacing.md,
+    cursor: 'pointer',
+    transition: `all ${theme.transition.base}`,
+    '&:hover': {
+      borderColor: theme.colors.primary,
+      boxShadow: `0 2px 8px rgba(236, 72, 153, 0.15)`,
+      transform: 'translateY(-2px)',
+    },
+    [mq.md]: {
+      padding: `${theme.spacing.lg} ${theme.spacing.md}`,
+    },
+  }),
+  
+  actionIconWrapper: css({
+    width: '48px',
+    height: '48px',
+    borderRadius: theme.radius.full,
+    background: 'linear-gradient(135deg, #fdf2f8 0%, #fce7f3 100%)',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    fontSize: theme.fontSize['3xl'],
+    color: theme.colors.primary,
+    transition: `all ${theme.transition.base}`,
+    '.quick-action-item:hover &': {
+      background: gradients.primary,
+      color: theme.colors.white,
+    },
+    [mq.md]: {
+      width: '40px',
+      height: '40px',
+      fontSize: theme.fontSize['2xl'],
+    },
+  }),
+  
+  actionLabel: css({
+    fontSize: theme.fontSize.sm,
+    fontWeight: theme.fontWeight.medium,
+    color: theme.colors.textPrimary,
+    textAlign: 'center',
+    [mq.md]: {
+      fontSize: theme.fontSize.xs,
+    },
+  }),
+}
 </script>
 
-<style scoped>
-.user-dashboard {
-  padding: 0;
-}
 
-/* 页面头部 */
-.dashboard-header {
-  margin-bottom: 32px;
-}
-
-.page-title {
-  font-size: 32px;
-  font-weight: 700;
-  margin: 0 0 8px 0;
-  color: #1E293B;
-  background: linear-gradient(135deg, #2563EB 0%, #3B82F6 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-}
-
-.page-subtitle {
-  font-size: 15px;
-  color: #64748B;
-  margin: 0;
-}
-
-/* Bento Grid 布局 */
-.bento-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-  gap: 24px;
-  width: 100%;
-}
-
-/* 卡片基础样式 */
-.bento-card {
-  background: #FFFFFF;
-  border-radius: 20px;
-  padding: 24px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04), 0 1px 2px rgba(0, 0, 0, 0.06);
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  border: 1px solid rgba(226, 232, 240, 0.8);
-}
-
-.bento-card:hover {
-  box-shadow: 0 8px 24px rgba(37, 99, 235, 0.12), 0 2px 6px rgba(37, 99, 235, 0.08);
-  transform: translateY(-2px);
-}
-
-/* 卡片头部 */
-.card-header {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  margin-bottom: 20px;
-}
-
-.card-icon {
-  width: 40px;
-  height: 40px;
-  border-radius: 12px;
-  background: linear-gradient(135deg, #2563EB 0%, #3B82F6 100%);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #FFFFFF;
-  font-size: 18px;
-}
-
-.card-title {
-  font-size: 18px;
-  font-weight: 600;
-  color: #1E293B;
-  margin: 0;
-}
-
-/* 卡片内容 */
-.card-content {
-  margin-bottom: 20px;
-}
-
-/* 个人信息卡片 */
-.profile-card {
-  grid-column: span 1;
-}
-
-.info-item {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 14px 0;
-  border-bottom: 1px solid #F1F5F9;
-}
-
-.info-item:last-child {
-  border-bottom: none;
-}
-
-.info-label {
-  font-size: 14px;
-  color: #64748B;
-  font-weight: 500;
-}
-
-.info-value {
-  font-size: 14px;
-  color: #1E293B;
-  font-weight: 500;
-}
-
-.card-footer {
-  padding-top: 16px;
-  border-top: 1px solid #F1F5F9;
-}
-
-.action-btn {
-  width: 100%;
-  height: 44px;
-  border-radius: 12px;
-  font-weight: 500;
-  background: linear-gradient(135deg, #2563EB 0%, #3B82F6 100%);
-  border: none;
-  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2);
-}
-
-.action-btn:hover {
-  background: linear-gradient(135deg, #1d4ed8 0%, #2563EB 100%);
-  box-shadow: 0 6px 16px rgba(37, 99, 235, 0.3);
-  transform: translateY(-1px);
-}
-
-/* 快速操作卡片 */
-.actions-card {
-  grid-column: span 1;
-}
-
-.action-grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 12px;
-}
-
-.quick-action-btn {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  padding: 20px 16px;
-  background: linear-gradient(135deg, #F8FAFC 0%, #F1F5F9 100%);
-  border: 1px solid #E2E8F0;
-  border-radius: 16px;
-  cursor: pointer;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.quick-action-btn:hover {
-  background: linear-gradient(135deg, #EFF6FF 0%, #DBEAFE 100%);
-  border-color: #3B82F6;
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.15);
-}
-
-.action-icon {
-  width: 48px;
-  height: 48px;
-  border-radius: 12px;
-  background: linear-gradient(135deg, #2563EB 0%, #3B82F6 100%);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #FFFFFF;
-  font-size: 20px;
-}
-
-.action-text {
-  font-size: 13px;
-  font-weight: 500;
-  color: #1E293B;
-}
-
-/* 最近活动卡片 */
-.activity-card {
-  grid-column: span 2;
-}
-
-/* 响应式设计 */
-@media (max-width: 1024px) {
-  .activity-card {
-    grid-column: span 1;
-  }
-}
-
-@media (max-width: 768px) {
-  .page-title {
-    font-size: 28px;
-  }
-
-  .bento-grid {
-    grid-template-columns: 1fr;
-    gap: 16px;
-  }
-
-  .bento-card {
-    padding: 20px;
-    border-radius: 16px;
-  }
-
-  .action-grid {
-    grid-template-columns: repeat(2, 1fr);
-    gap: 10px;
-  }
-
-  .quick-action-btn {
-    padding: 16px 12px;
-  }
-
-  .action-icon {
-    width: 40px;
-    height: 40px;
-    font-size: 18px;
-  }
-
-  .action-text {
-    font-size: 12px;
-  }
-}
-
-@media (max-width: 480px) {
-  .dashboard-header {
-    margin-bottom: 24px;
-  }
-
-  .page-title {
-    font-size: 24px;
-  }
-
-  .action-grid {
-    grid-template-columns: 1fr;
-  }
-}
-</style>

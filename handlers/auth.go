@@ -5,6 +5,7 @@ package handlers
 
 import (
 	"fmt"
+	"log"
 	"strconv"
 
 	"github.com/gofiber/fiber/v2"
@@ -93,9 +94,9 @@ func HandleRegister() fiber.Handler {
 			return ctx.Status(fiber.StatusBadRequest).JSON(types.ErrorResponse("无效的请求数据"))
 		}
 
-		// 验证参数（username, email, password）
-		if req.Username == "" || req.Email == "" || req.Password == "" {
-			return ctx.Status(fiber.StatusBadRequest).JSON(types.ErrorResponse("用户名、邮箱和密码不能为空"))
+		// 验证参数
+		if req.Username == "" || req.Email == "" || req.Password == "" || req.VerificationCode == "" {
+			return ctx.Status(fiber.StatusBadRequest).JSON(types.ErrorResponse("用户名、邮箱、密码和验证码不能为空"))
 		}
 
 		// 验证用户名长度
@@ -108,7 +109,13 @@ func HandleRegister() fiber.Handler {
 			return ctx.Status(fiber.StatusBadRequest).JSON(types.ErrorResponse("密码长度至少为6个字符"))
 		}
 
-		// 调用 AuthService.Register()
+		// 验证邮箱验证码
+		valid, err := services.VerifyCode(req.Email, req.VerificationCode, "register")
+		if err != nil || !valid {
+			return ctx.Status(fiber.StatusBadRequest).JSON(types.ErrorResponse("验证码无效或已过期"))
+		}
+
+		// 注册用户
 		user, err := services.RegisterUser(req.Email, req.Password, req.Username)
 		if err != nil {
 			return ctx.Status(fiber.StatusBadRequest).JSON(types.ErrorResponse(err.Error()))
@@ -131,28 +138,52 @@ func HandleRegister() fiber.Handler {
 
 // SendVerificationCodeRequest 发送验证码请求
 type SendVerificationCodeRequest struct {
-	Email string `json:"email"`
+	Email        string `json:"email"`
+	Purpose      string `json:"purpose"`      // "register" or "reset_password"
+	CaptchaToken string `json:"captchaToken"` // 可选的验证码
 }
 
 // HandleSendVerificationCode 处理发送验证码请求
 // Requirements: 3.6
 func HandleSendVerificationCode() fiber.Handler {
 	return func(ctx *fiber.Ctx) error {
-		// 解析请求（email）
+		// 解析请求
 		var req SendVerificationCodeRequest
 		if err := ctx.BodyParser(&req); err != nil {
 			return ctx.Status(fiber.StatusBadRequest).JSON(types.ErrorResponse("无效的请求数据"))
 		}
 
+		// 验证参数
 		if req.Email == "" {
 			return ctx.Status(fiber.StatusBadRequest).JSON(types.ErrorResponse("邮箱不能为空"))
 		}
 
-		// 调用 AuthService.SendVerificationCode()
-		// TODO: 实现发送验证码逻辑
-		// 目前返回成功响应
+		if req.Purpose != "register" && req.Purpose != "reset_password" {
+			return ctx.Status(fiber.StatusBadRequest).JSON(types.ErrorResponse("无效的验证码用途"))
+		}
+
+		// 验证 Captcha（如果启用）
+		if req.CaptchaToken != "" {
+			valid, err := services.VerifyCaptcha(req.CaptchaToken)
+			if err != nil || !valid {
+				return ctx.Status(fiber.StatusBadRequest).JSON(types.ErrorResponse("验证码验证失败"))
+			}
+		}
+
+		// 异步发送验证码邮件（不阻塞请求）
+		go func() {
+			code, err := services.SendVerificationEmail(req.Email, req.Purpose)
+			if err != nil {
+				log.Printf("Failed to send verification email to %s: %v", req.Email, err)
+			} else if code != "" {
+				// 开发环境下记录验证码
+				log.Printf("Verification code sent to %s: %s", req.Email, code)
+			}
+		}()
+
+		// 立即返回成功响应
 		return ctx.JSON(types.SuccessResponse(map[string]string{
-			"message": "验证码已发送",
+			"message": "验证码已发送，请查收邮件",
 		}))
 	}
 }
@@ -168,12 +199,13 @@ type ResetPasswordRequest struct {
 // Requirements: 3.7
 func HandleResetPassword() fiber.Handler {
 	return func(ctx *fiber.Ctx) error {
-		// 解析请求（email, code, newPassword）
+		// 解析请求
 		var req ResetPasswordRequest
 		if err := ctx.BodyParser(&req); err != nil {
 			return ctx.Status(fiber.StatusBadRequest).JSON(types.ErrorResponse("无效的请求数据"))
 		}
 
+		// 验证参数
 		if req.Email == "" || req.Code == "" || req.NewPassword == "" {
 			return ctx.Status(fiber.StatusBadRequest).JSON(types.ErrorResponse("邮箱、验证码和新密码不能为空"))
 		}
@@ -183,10 +215,14 @@ func HandleResetPassword() fiber.Handler {
 			return ctx.Status(fiber.StatusBadRequest).JSON(types.ErrorResponse("密码长度至少为6个字符"))
 		}
 
-		// TODO: 验证验证码
+		// 验证验证码
+		valid, err := services.VerifyCode(req.Email, req.Code, "reset_password")
+		if err != nil || !valid {
+			return ctx.Status(fiber.StatusBadRequest).JSON(types.ErrorResponse("验证码无效或已过期"))
+		}
 
-		// 调用 AuthService.ResetPassword()
-		err := services.ResetPassword(req.Email, req.NewPassword)
+		// 重置密码
+		err = services.ResetPassword(req.Email, req.NewPassword)
 		if err != nil {
 			return ctx.Status(fiber.StatusBadRequest).JSON(types.ErrorResponse(err.Error()))
 		}

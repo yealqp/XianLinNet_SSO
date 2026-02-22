@@ -59,7 +59,20 @@ func HandleSubmitRealName() fiber.Handler {
 			return ctx.Status(fiber.StatusBadRequest).JSON(types.ErrorResponse("用户已完成实名认证"))
 		}
 
-		// 更新用户实名状态并加密存储姓名和身份证号
+		// 调用实名认证 API 验证身份证信息
+		verifyResult, err := services.VerifyRealName(req.Name, req.IDCard)
+		if err != nil {
+			// API 调用失败，返回错误信息
+			return ctx.Status(fiber.StatusInternalServerError).JSON(types.ErrorResponse("实名认证服务异常: " + err.Error()))
+		}
+
+		// 检查验证结果
+		if !verifyResult.Success {
+			// 验证失败，返回失败信息
+			return ctx.Status(fiber.StatusBadRequest).JSON(types.ErrorResponse(verifyResult.Message))
+		}
+
+		// 验证成功，更新用户实名状态并加密存储姓名和身份证号
 		err = services.UpdateUserRealNameStatus(userIDInt, true, req.Name, req.IDCard)
 		if err != nil {
 			return ctx.Status(fiber.StatusInternalServerError).JSON(types.ErrorResponse(err.Error()))
@@ -67,8 +80,9 @@ func HandleSubmitRealName() fiber.Handler {
 
 		// 返回成功响应
 		return ctx.JSON(types.SuccessResponse(map[string]interface{}{
-			"message":    "实名认证信息已提交",
+			"message":    "实名认证成功",
 			"isRealName": true,
+			"order_no":   verifyResult.OrderNo,
 		}))
 	}
 }
@@ -126,6 +140,57 @@ func HandleGetRealNameInfo() fiber.Handler {
 		}
 
 		return ctx.JSON(types.SuccessResponse(realNameInfo))
+	}
+}
+
+// HandleAdminGetRealNameInfo 处理管理员获取用户实名信息请求
+// Requirements: 9.2
+func HandleAdminGetRealNameInfo() fiber.Handler {
+	return func(ctx *fiber.Ctx) error {
+		// 需要管理员权限（已通过 AdminAuthMiddleware 验证）
+
+		// 从路径参数获取用户 ID
+		userIDStr := ctx.Params("userId")
+		if userIDStr == "" {
+			return ctx.Status(fiber.StatusBadRequest).JSON(types.ErrorResponse("用户ID不能为空"))
+		}
+
+		// 转换 userID 为 int64
+		userIDInt, err := strconv.ParseInt(userIDStr, 10, 64)
+		if err != nil {
+			return ctx.Status(fiber.StatusBadRequest).JSON(types.ErrorResponse("无效的用户ID"))
+		}
+
+		// 获取用户
+		user, err := models.GetUserById(userIDInt)
+		if err != nil {
+			return ctx.Status(fiber.StatusInternalServerError).JSON(types.ErrorResponse("获取用户信息失败"))
+		}
+		if user == nil {
+			return ctx.Status(fiber.StatusNotFound).JSON(types.ErrorResponse("用户不存在"))
+		}
+
+		// 如果用户未实名认证，返回空信息
+		if !user.IsRealName {
+			return ctx.JSON(types.SuccessResponse(map[string]interface{}{
+				"isRealName": false,
+				"name":       "",
+				"idcard":     "",
+			}))
+		}
+
+		// 获取解密后的实名信息（管理员可查看完整信息）
+		name, idcard, err := services.GetDecryptedRealNameInfo(userIDInt)
+		if err != nil {
+			return ctx.Status(fiber.StatusInternalServerError).JSON(types.ErrorResponse("获取实名信息失败"))
+		}
+
+		// 返回完整的实名信息供管理员查看
+		return ctx.JSON(types.SuccessResponse(map[string]interface{}{
+			"isRealName": true,
+			"name":       name,
+			"idcard":     idcard,
+		}))
 	}
 }
 

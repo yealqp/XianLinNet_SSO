@@ -98,5 +98,5 @@ func RegisterRoutes(app *fiber.App) {
 
 	// 管理员验证实名信息（需要管理员权限）
 	admin.Post("/realname/verify", handlers.HandleVerifyRealName())
-	admin.Get("/realname/:userId", handlers.HandleGetRealNameInfo())
+	admin.Get("/realname/:userId", handlers.HandleAdminGetRealNameInfo())
 }
