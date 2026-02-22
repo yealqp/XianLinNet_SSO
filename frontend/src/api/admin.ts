@@ -43,6 +43,16 @@ export const adminApi = {
     return response.data
   },
 
+  async banUser(id: number) {
+    const response = await apiClient.post<void>(`/admin/users/${id}/ban`)
+    return response.data
+  },
+
+  async unbanUser(id: number) {
+    const response = await apiClient.post<void>(`/admin/users/${id}/unban`)
+    return response.data
+  },
+
   async getApplications() {
     const response = await apiClient.get<Application[]>('/admin/applications')
     return response.data

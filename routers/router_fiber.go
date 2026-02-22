@@ -89,6 +89,8 @@ func RegisterRoutes(app *fiber.App) {
 	admin.Get("/users/:id", handlers.HandleGetUser())
 	admin.Post("/users/:id/update", handlers.HandleUpdateUser())
 	admin.Post("/users/:id/delete", handlers.HandleDeleteUser())
+	admin.Post("/users/:id/ban", handlers.HandleBanUser())
+	admin.Post("/users/:id/unban", handlers.HandleUnbanUser())
 
 	// 应用管理
 	admin.Get("/applications", handlers.HandleGetApplications())

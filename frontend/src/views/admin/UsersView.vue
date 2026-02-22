@@ -27,6 +27,11 @@
             {{ record.isRealName ? '已认证' : '未认证' }}
           </a-tag>
         </template>
+        <template v-else-if="column.key === 'isForbidden'">
+          <a-tag :color="record.isForbidden ? 'red' : 'green'">
+            {{ record.isForbidden ? '已封禁' : '正常' }}
+          </a-tag>
+        </template>
         <template v-else-if="column.key === 'createdTime'">
           {{ formatDate(record.createdTime) }}
         </template>
@@ -42,6 +47,15 @@
               @click="showRealNameInfo(record)"
             >
               查看实名
+            </a-button>
+            <a-button 
+              v-if="!record.isAdmin"
+              type="link" 
+              size="small" 
+              :danger="!record.isForbidden"
+              @click="handleBanToggle(record)"
+            >
+              {{ record.isForbidden ? '解封' : '封禁' }}
             </a-button>
             <a-popconfirm
               title="确定要删除此用户吗？"
@@ -156,6 +170,7 @@ const columns: Column[] = [
   { title: 'QQ号', dataIndex: 'qq', key: 'qq', width: 120 },
   { title: '管理员', dataIndex: 'isAdmin', key: 'isAdmin', width: 80 },
   { title: '实名认证', dataIndex: 'isRealName', key: 'isRealName', width: 100 },
+  { title: '封禁状态', dataIndex: 'isForbidden', key: 'isForbidden', width: 100 },
   { title: '创建时间', dataIndex: 'createdTime', key: 'createdTime', width: 180 },
   { title: '操作', key: 'actions', width: 150 }
 ]
@@ -274,6 +289,22 @@ const handleDelete = async (user: User) => {
   } catch (error) {
     console.error('Delete user failed:', error)
     message.error('删除失败')
+  }
+}
+
+const handleBanToggle = async (user: User) => {
+  try {
+    if (user.isForbidden) {
+      await adminApi.unbanUser(user.id)
+      message.success('用户已解封')
+    } else {
+      await adminApi.banUser(user.id)
+      message.success('用户已封禁')
+    }
+    loadData()
+  } catch (error) {
+    console.error('Ban/Unban user failed:', error)
+    message.error(user.isForbidden ? '解封失败' : '封禁失败')
   }
 }
 

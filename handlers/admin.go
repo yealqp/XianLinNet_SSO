@@ -41,13 +41,14 @@ func HandleGetUsers() fiber.Handler {
 		userList := make([]types.UserInfo, 0, len(users))
 		for _, user := range users {
 			userList = append(userList, types.UserInfo{
-				ID:         user.Id,
-				Email:      user.Email,
-				Username:   user.Username,
-				IsAdmin:    user.IsAdmin,
-				IsRealName: user.IsRealName,
-				QQ:         user.QQ,
-				Avatar:     user.Avatar,
+				ID:          user.Id,
+				Email:       user.Email,
+				Username:    user.Username,
+				IsAdmin:     user.IsAdmin,
+				IsRealName:  user.IsRealName,
+				IsForbidden: user.IsForbidden,
+				QQ:          user.QQ,
+				Avatar:      user.Avatar,
 			})
 		}
 
@@ -82,13 +83,14 @@ func HandleGetUser() fiber.Handler {
 
 		// 构造响应数据
 		userInfo := types.UserInfo{
-			ID:         user.Id,
-			Email:      user.Email,
-			Username:   user.Username,
-			IsAdmin:    user.IsAdmin,
-			IsRealName: user.IsRealName,
-			QQ:         user.QQ,
-			Avatar:     user.Avatar,
+			ID:          user.Id,
+			Email:       user.Email,
+			Username:    user.Username,
+			IsAdmin:     user.IsAdmin,
+			IsRealName:  user.IsRealName,
+			IsForbidden: user.IsForbidden,
+			QQ:          user.QQ,
+			Avatar:      user.Avatar,
 		}
 
 		return ctx.JSON(types.SuccessResponse(userInfo))
@@ -160,13 +162,14 @@ func HandleCreateUser() fiber.Handler {
 
 		// 返回用户信息
 		userInfo := types.UserInfo{
-			ID:         user.Id,
-			Email:      user.Email,
-			Username:   user.Username,
-			IsAdmin:    user.IsAdmin,
-			IsRealName: user.IsRealName,
-			QQ:         user.QQ,
-			Avatar:     user.Avatar,
+			ID:          user.Id,
+			Email:       user.Email,
+			Username:    user.Username,
+			IsAdmin:     user.IsAdmin,
+			IsRealName:  user.IsRealName,
+			IsForbidden: user.IsForbidden,
+			QQ:          user.QQ,
+			Avatar:      user.Avatar,
 		}
 
 		return ctx.JSON(types.SuccessResponse(userInfo))
@@ -240,13 +243,14 @@ func HandleUpdateUser() fiber.Handler {
 
 		// 返回更新后的用户信息
 		userInfo := types.UserInfo{
-			ID:         user.Id,
-			Email:      user.Email,
-			Username:   user.Username,
-			IsAdmin:    user.IsAdmin,
-			IsRealName: user.IsRealName,
-			QQ:         user.QQ,
-			Avatar:     user.Avatar,
+			ID:          user.Id,
+			Email:       user.Email,
+			Username:    user.Username,
+			IsAdmin:     user.IsAdmin,
+			IsRealName:  user.IsRealName,
+			IsForbidden: user.IsForbidden,
+			QQ:          user.QQ,
+			Avatar:      user.Avatar,
 		}
 
 		return ctx.JSON(types.SuccessResponse(userInfo))
@@ -699,6 +703,93 @@ func HandleClearCache() fiber.Handler {
 
 		return ctx.JSON(types.SuccessResponse(map[string]string{
 			"message": "缓存已清除",
+		}))
+	}
+}
+
+// HandleBanUser 封禁用户（需要管理员权限）
+func HandleBanUser() fiber.Handler {
+	return func(ctx *fiber.Ctx) error {
+		// 获取用户 ID
+		idStr := ctx.Params("id")
+		if idStr == "" {
+			return ctx.Status(fiber.StatusBadRequest).JSON(types.ErrorResponse("用户ID不能为空"))
+		}
+
+		// 转换为 int64
+		id, err := strconv.ParseInt(idStr, 10, 64)
+		if err != nil {
+			return ctx.Status(fiber.StatusBadRequest).JSON(types.ErrorResponse("无效的用户ID"))
+		}
+
+		// 获取用户
+		user, err := models.GetUserById(id)
+		if err != nil {
+			return ctx.Status(fiber.StatusInternalServerError).JSON(types.ErrorResponse("获取用户信息失败"))
+		}
+		if user == nil {
+			return ctx.Status(fiber.StatusNotFound).JSON(types.ErrorResponse("用户不存在"))
+		}
+
+		// 不能封禁管理员
+		if user.IsAdmin {
+			return ctx.Status(fiber.StatusBadRequest).JSON(types.ErrorResponse("不能封禁管理员账户"))
+		}
+
+		// 设置封禁状态
+		user.IsForbidden = true
+		user.UpdatedTime = time.Now().Format("2006-01-02T15:04:05Z07:00")
+
+		// 保存到数据库
+		_, err = models.UpdateUser(id, user)
+		if err != nil {
+			return ctx.Status(fiber.StatusInternalServerError).JSON(types.ErrorResponse("封禁用户失败"))
+		}
+
+		return ctx.JSON(types.SuccessResponse(map[string]interface{}{
+			"message": "用户已封禁",
+			"userId":  id,
+		}))
+	}
+}
+
+// HandleUnbanUser 解封用户（需要管理员权限）
+func HandleUnbanUser() fiber.Handler {
+	return func(ctx *fiber.Ctx) error {
+		// 获取用户 ID
+		idStr := ctx.Params("id")
+		if idStr == "" {
+			return ctx.Status(fiber.StatusBadRequest).JSON(types.ErrorResponse("用户ID不能为空"))
+		}
+
+		// 转换为 int64
+		id, err := strconv.ParseInt(idStr, 10, 64)
+		if err != nil {
+			return ctx.Status(fiber.StatusBadRequest).JSON(types.ErrorResponse("无效的用户ID"))
+		}
+
+		// 获取用户
+		user, err := models.GetUserById(id)
+		if err != nil {
+			return ctx.Status(fiber.StatusInternalServerError).JSON(types.ErrorResponse("获取用户信息失败"))
+		}
+		if user == nil {
+			return ctx.Status(fiber.StatusNotFound).JSON(types.ErrorResponse("用户不存在"))
+		}
+
+		// 设置解封状态
+		user.IsForbidden = false
+		user.UpdatedTime = time.Now().Format("2006-01-02T15:04:05Z07:00")
+
+		// 保存到数据库
+		_, err = models.UpdateUser(id, user)
+		if err != nil {
+			return ctx.Status(fiber.StatusInternalServerError).JSON(types.ErrorResponse("解封用户失败"))
+		}
+
+		return ctx.JSON(types.SuccessResponse(map[string]interface{}{
+			"message": "用户已解封",
+			"userId":  id,
 		}))
 	}
 }

@@ -69,13 +69,14 @@ func HandleLogin() fiber.Handler {
 			ExpiresIn:    int(application.ExpireInHours * 3600),
 			TokenType:    "Bearer",
 			User: types.UserInfo{
-				ID:         user.Id,
-				Email:      user.Email,
-				Username:   user.Username,
-				IsAdmin:    user.IsAdmin,
-				IsRealName: user.IsRealName,
-				QQ:         user.QQ,
-				Avatar:     user.Avatar,
+				ID:          user.Id,
+				Email:       user.Email,
+				Username:    user.Username,
+				IsAdmin:     user.IsAdmin,
+				IsRealName:  user.IsRealName,
+				IsForbidden: user.IsForbidden,
+				QQ:          user.QQ,
+				Avatar:      user.Avatar,
 			},
 		}
 
@@ -123,13 +124,14 @@ func HandleRegister() fiber.Handler {
 
 		// 返回用户信息
 		userInfo := types.UserInfo{
-			ID:         user.Id,
-			Email:      user.Email,
-			Username:   user.Username,
-			IsAdmin:    user.IsAdmin,
-			IsRealName: user.IsRealName,
-			QQ:         user.QQ,
-			Avatar:     user.Avatar,
+			ID:          user.Id,
+			Email:       user.Email,
+			Username:    user.Username,
+			IsAdmin:     user.IsAdmin,
+			IsRealName:  user.IsRealName,
+			IsForbidden: user.IsForbidden,
+			QQ:          user.QQ,
+			Avatar:      user.Avatar,
 		}
 
 		return ctx.JSON(types.SuccessResponse(userInfo))
@@ -291,13 +293,14 @@ func HandleUpdateProfile() fiber.Handler {
 
 		// 返回更新后的用户信息
 		userInfo := types.UserInfo{
-			ID:         user.Id,
-			Email:      user.Email,
-			Username:   user.Username,
-			IsAdmin:    user.IsAdmin,
-			IsRealName: user.IsRealName,
-			QQ:         user.QQ,
-			Avatar:     user.Avatar,
+			ID:          user.Id,
+			Email:       user.Email,
+			Username:    user.Username,
+			IsAdmin:     user.IsAdmin,
+			IsRealName:  user.IsRealName,
+			IsForbidden: user.IsForbidden,
+			QQ:          user.QQ,
+			Avatar:      user.Avatar,
 		}
 
 		return ctx.JSON(types.SuccessResponse(userInfo))

@@ -26,11 +26,12 @@ type RegisterRequest struct {
 
 // UserInfo 用户信息
 type UserInfo struct {
-	ID         int64  `json:"id"`
-	Email      string `json:"email"`
-	Username   string `json:"username"`
-	IsAdmin    bool   `json:"isAdmin"`
-	IsRealName bool   `json:"isRealName,omitempty"`
-	QQ         string `json:"qq,omitempty"`
-	Avatar     string `json:"avatar,omitempty"`
+	ID          int64  `json:"id"`
+	Email       string `json:"email"`
+	Username    string `json:"username"`
+	IsAdmin     bool   `json:"isAdmin"`
+	IsRealName  bool   `json:"isRealName,omitempty"`
+	IsForbidden bool   `json:"isForbidden"`
+	QQ          string `json:"qq,omitempty"`
+	Avatar      string `json:"avatar,omitempty"`
 }
