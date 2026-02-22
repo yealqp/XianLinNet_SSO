@@ -15,7 +15,6 @@ import (
 
 var (
 	redisClient     *redis.Client
-	ctx             = context.Background()
 	ServerStartTime = time.Now() // 服务器启动时间
 )
 
@@ -24,6 +23,9 @@ const (
 	UserCacheExpiration        = 15 * time.Minute // 用户信息缓存 15 分钟
 	ApplicationCacheExpiration = 30 * time.Minute // 应用配置缓存 30 分钟
 	TokenCacheExpiration       = 1 * time.Hour    // Token 缓存 1 小时
+
+	// Redis operation timeout
+	RedisTimeout = 3 * time.Second // Redis 操作超时时间
 )
 
 // InitRedis initializes Redis connection
@@ -38,12 +40,20 @@ func InitRedis() error {
 	redisAddr := fmt.Sprintf("%s:%s", redisCfg.Host, redisCfg.Port)
 
 	redisClient = redis.NewClient(&redis.Options{
-		Addr:     redisAddr,
-		Password: redisCfg.Password,
-		DB:       redisCfg.DB,
+		Addr:         redisAddr,
+		Password:     redisCfg.Password,
+		DB:           redisCfg.DB,
+		DialTimeout:  5 * time.Second, // 连接超时
+		ReadTimeout:  3 * time.Second, // 读取超时
+		WriteTimeout: 3 * time.Second, // 写入超时
+		PoolSize:     10,              // 连接池大小
+		MinIdleConns: 2,               // 最小空闲连接
+		MaxRetries:   2,               // 最大重试次数
 	})
 
-	// Test connection
+	// Test connection with timeout
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
 	_, err = redisClient.Ping(ctx).Result()
 	if err != nil {
 		return fmt.Errorf("failed to connect to Redis: %v", err)
@@ -83,6 +93,8 @@ func CacheToken(tokenHash string, tokenData interface{}, expiration time.Duratio
 		return err
 	}
 
+	ctx, cancel := context.WithTimeout(context.Background(), RedisTimeout)
+	defer cancel()
 	return redisClient.Set(ctx, fmt.Sprintf("token:%s", tokenHash), data, expiration).Err()
 }
 
@@ -92,6 +104,8 @@ func GetCachedToken(tokenHash string) ([]byte, error) {
 		return nil, nil // Redis not configured
 	}
 
+	ctx, cancel := context.WithTimeout(context.Background(), RedisTimeout)
+	defer cancel()
 	data, err := redisClient.Get(ctx, fmt.Sprintf("token:%s", tokenHash)).Bytes()
 	if err == redis.Nil {
 		return nil, nil // Key does not exist
@@ -105,6 +119,8 @@ func DeleteCachedToken(tokenHash string) error {
 		return nil
 	}
 
+	ctx, cancel := context.WithTimeout(context.Background(), RedisTimeout)
+	defer cancel()
 	return redisClient.Del(ctx, fmt.Sprintf("token:%s", tokenHash)).Err()
 }
 
@@ -124,6 +140,8 @@ func CacheUser(userId string, userData interface{}, expiration time.Duration) er
 		return err
 	}
 
+	ctx, cancel := context.WithTimeout(context.Background(), RedisTimeout)
+	defer cancel()
 	return redisClient.Set(ctx, fmt.Sprintf("user:%s", userId), data, expiration).Err()
 }
 
@@ -133,6 +151,8 @@ func GetCachedUser(userId string) ([]byte, error) {
 		return nil, nil
 	}
 
+	ctx, cancel := context.WithTimeout(context.Background(), RedisTimeout)
+	defer cancel()
 	data, err := redisClient.Get(ctx, fmt.Sprintf("user:%s", userId)).Bytes()
 	if err == redis.Nil {
 		return nil, nil
@@ -146,6 +166,8 @@ func InvalidateUserCache(userId string) error {
 		return nil
 	}
 
+	ctx, cancel := context.WithTimeout(context.Background(), RedisTimeout)
+	defer cancel()
 	return redisClient.Del(ctx, fmt.Sprintf("user:%s", userId)).Err()
 }
 
@@ -160,6 +182,8 @@ func CacheApplication(clientId string, appData interface{}) error {
 		return err
 	}
 
+	ctx, cancel := context.WithTimeout(context.Background(), RedisTimeout)
+	defer cancel()
 	return redisClient.Set(ctx, fmt.Sprintf("app:%s", clientId), data, ApplicationCacheExpiration).Err()
 }
 
@@ -169,6 +193,8 @@ func GetCachedApplication(clientId string) ([]byte, error) {
 		return nil, nil
 	}
 
+	ctx, cancel := context.WithTimeout(context.Background(), RedisTimeout)
+	defer cancel()
 	data, err := redisClient.Get(ctx, fmt.Sprintf("app:%s", clientId)).Bytes()
 	if err == redis.Nil {
 		return nil, nil
@@ -182,6 +208,8 @@ func InvalidateApplicationCache(clientId string) error {
 		return nil
 	}
 
+	ctx, cancel := context.WithTimeout(context.Background(), RedisTimeout)
+	defer cancel()
 	return redisClient.Del(ctx, fmt.Sprintf("app:%s", clientId)).Err()
 }
 
@@ -191,6 +219,8 @@ func SetRateLimit(key string, limit int, window time.Duration) error {
 		return nil
 	}
 
+	ctx, cancel := context.WithTimeout(context.Background(), RedisTimeout)
+	defer cancel()
 	pipe := redisClient.Pipeline()
 	pipe.Incr(ctx, fmt.Sprintf("ratelimit:%s", key))
 	pipe.Expire(ctx, fmt.Sprintf("ratelimit:%s", key), window)
@@ -204,6 +234,8 @@ func CheckRateLimit(key string, limit int) (bool, error) {
 		return false, nil // No rate limiting if Redis not configured
 	}
 
+	ctx, cancel := context.WithTimeout(context.Background(), RedisTimeout)
+	defer cancel()
 	count, err := redisClient.Get(ctx, fmt.Sprintf("ratelimit:%s", key)).Int()
 	if err == redis.Nil {
 		return false, nil // No limit set yet
@@ -221,5 +253,7 @@ func ClearCache() error {
 		return nil // Redis not configured
 	}
 
+	ctx, cancel := context.WithTimeout(context.Background(), RedisTimeout)
+	defer cancel()
 	return redisClient.FlushDB(ctx).Err()
 }
