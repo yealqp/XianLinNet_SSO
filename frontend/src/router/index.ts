@@ -51,6 +51,11 @@ const routes: RouteRecordRaw[] = [
         path: 'realname',
         name: 'RealName',
         component: () => import('@/views/console/RealNameView.vue')
+      },
+      {
+        path: 'authorizations',
+        name: 'Authorizations',
+        component: () => import('@/views/console/AuthorizationsView.vue')
       }
     ]
   },

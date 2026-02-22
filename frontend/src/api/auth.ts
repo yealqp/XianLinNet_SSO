@@ -71,5 +71,43 @@ export const authApi = {
       organization: string
     }>>(`/auth/application-info?client_id=${clientId}`)
     return response.data
+  },
+
+  // 用户令牌和授权管理
+  async getUserTokens() {
+    const response = await apiClient.get<ApiResponse<Array<{
+      name: string
+      createdTime: string
+      application: string
+      applicationName: string
+      applicationLogo: string
+      expiresAt: string
+      scope: string
+      tokenType: string
+      isRevoked: boolean
+      isExpired: boolean
+    }>>>('/user/tokens')
+    return response.data
+  },
+
+  async revokeUserToken(tokenName: string) {
+    const response = await apiClient.post<ApiResponse<{ message: string }>>(`/user/tokens/${tokenName}/revoke`)
+    return response.data
+  },
+
+  async getUserApplications() {
+    const response = await apiClient.get<ApiResponse<Array<{
+      owner: string
+      name: string
+      displayName: string
+      logo: string
+      description: string
+      homepageUrl: string
+      firstAuth: string
+      lastAuth: string
+      tokenCount: number
+      scopes: string[]
+    }>>>('/user/applications')
+    return response.data
   }
 }

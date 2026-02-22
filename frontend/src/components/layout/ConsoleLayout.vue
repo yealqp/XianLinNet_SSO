@@ -27,6 +27,10 @@
           <IdcardOutlined />
           <span>实名认证</span>
         </a-menu-item>
+        <a-menu-item key="authorizations" @click="$router.push('/console/authorizations')">
+          <SafetyOutlined />
+          <span>授权管理</span>
+        </a-menu-item>
         <a-sub-menu v-if="isAdmin" key="admin">
           <template #title>
             <SettingOutlined />
@@ -108,6 +112,7 @@ import {
   AppstoreOutlined,
   KeyOutlined,
   IdcardOutlined,
+  SafetyOutlined,
   MenuUnfoldOutlined,
   MenuFoldOutlined,
   LogoutOutlined

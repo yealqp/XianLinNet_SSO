@@ -75,6 +75,11 @@ func RegisterRoutes(app *fiber.App) {
 	api.Post("/auth/update-profile", middlewares.JWTAuthMiddleware(), handlers.HandleUpdateProfile())
 	api.Get("/userinfo", middlewares.JWTAuthMiddleware(), handlers.HandleUserInfo())
 
+	// 用户令牌和授权管理
+	api.Get("/user/tokens", middlewares.JWTAuthMiddleware(), handlers.HandleGetUserTokens())
+	api.Post("/user/tokens/:name/revoke", middlewares.JWTAuthMiddleware(), handlers.HandleRevokeUserToken())
+	api.Get("/user/applications", middlewares.JWTAuthMiddleware(), handlers.HandleGetUserApplications())
+
 	// ========== 管理员路由（需要 JWT 认证 + 管理员权限） ==========
 	admin := api.Group("/admin", middlewares.JWTAuthMiddleware(), middlewares.AdminAuthMiddleware())
 
