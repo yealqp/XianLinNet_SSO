@@ -134,7 +134,7 @@ func HandleGetRealNameInfo() fiber.Handler {
 
 			// 脱敏处理：身份证号显示前6位和后4位，中间用*代替
 			if len(idcard) >= 10 {
-				maskedIDCard := idcard[:6] + "********" + idcard[len(idcard)-4:]
+				maskedIDCard := idcard[:4] + "************" + idcard[len(idcard)-2:]
 				realNameInfo["idcard"] = maskedIDCard
 			}
 		}

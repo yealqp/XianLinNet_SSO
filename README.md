@@ -59,6 +59,8 @@ cd oauth-server
 
 #### 2. Backend Setup
 
+**For Development:**
+
 ```bash
 # Install Go dependencies
 go mod download
@@ -67,17 +69,47 @@ go mod download
 # See docs/postgresql-setup.md for detailed instructions
 createdb oauth_server
 
-# Copy configuration file
-copy .env.example .env
+# Copy development configuration
+copy .env.development .env
 
 # Edit .env and configure:
+# - Set APP_ENV=development (enables CORS middleware)
 # - PostgreSQL connection string (REQUIRED)
 # - JWT secret (minimum 32 characters)
 # - Admin credentials (REQUIRED for first run)
-# - SMTP settings (if email verification needed)
+# - SMTP settings (optional for development)
 # - Redis settings (optional)
 
 # Initialize database and create admin user
+go run main.go init
+
+# Start the backend server
+go run main.go
+```
+
+**For Production:**
+
+```bash
+# Copy production configuration
+copy .env.example .env
+
+# Edit .env and configure:
+# - Set APP_ENV=production (CORS handled by nginx)
+# - All required settings (see Configuration section)
+
+# Initialize database
+go run main.go init
+
+# Build and run
+go build -o oauth-server
+./oauth-server
+```
+
+The backend server will start on `http://localhost:8080` (or your configured port).
+
+**Important:** 
+- Development mode (`APP_ENV=development`): CORS middleware is enabled in the backend
+- Production mode (`APP_ENV=production`): CORS should be handled by nginx to avoid duplicate headers
 go run main.go init
 
 # Start the backend server
@@ -316,6 +348,8 @@ cd oauth-server
 
 #### 2. 后端设置
 
+**开发环境：**
+
 ```bash
 # 安装 Go 依赖
 go mod download
@@ -324,14 +358,15 @@ go mod download
 # 详细说明请参见 docs/postgresql-setup.md
 createdb oauth_server
 
-# 复制配置文件
-copy .env.example .env
+# 复制开发环境配置
+copy .env.development .env
 
 # 编辑 .env 并配置：
+# - 设置 APP_ENV=development（启用 CORS 中间件）
 # - PostgreSQL 连接字符串（必需）
 # - JWT 密钥（至少 32 个字符）
 # - 管理员凭据（首次运行必需）
-# - SMTP 设置（如需邮箱验证）
+# - SMTP 设置（开发环境可选）
 # - Redis 设置（可选）
 
 # 初始化数据库并创建管理员用户
@@ -341,7 +376,29 @@ go run main.go init
 go run main.go
 ```
 
+**生产环境：**
+
+```bash
+# 复制生产环境配置
+copy .env.example .env
+
+# 编辑 .env 并配置：
+# - 设置 APP_ENV=production（CORS 由 nginx 处理）
+# - 所有必需设置（参见配置说明部分）
+
+# 初始化数据库
+go run main.go init
+
+# 编译并运行
+go build -o oauth-server
+./oauth-server
+```
+
 后端服务器将在 `http://localhost:8080`（或您配置的端口）启动。
+
+**重要提示：**
+- 开发模式（`APP_ENV=development`）：后端启用 CORS 中间件
+- 生产模式（`APP_ENV=production`）：CORS 由 nginx 处理，避免重复添加 CORS 头
 
 #### 3. 前端设置
 

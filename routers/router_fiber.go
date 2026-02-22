@@ -4,6 +4,9 @@
 package routers
 
 import (
+	"log"
+	"os"
+
 	"github.com/gofiber/fiber/v2"
 	"github.com/oauth-server/oauth-server/handlers"
 	"github.com/oauth-server/oauth-server/middlewares"
@@ -14,8 +17,15 @@ import (
 // 按照执行顺序注册：CORS -> Compress -> Logger -> Recovery
 func RegisterMiddlewares(app *fiber.App) {
 	// CORS 中间件 - 处理跨域请求
-	// 注意：CORS 已在 nginx 层处理，这里不再重复添加以避免 CORS 头重复
-	// app.Use(middlewares.CORSMiddleware())
+	// 开发环境：启用 CORS 中间件
+	// 生产环境：CORS 由 nginx 处理，避免重复添加 CORS 头
+	env := os.Getenv("APP_ENV")
+	if env != "production" {
+		app.Use(middlewares.CORSMiddleware())
+		log.Println("CORS middleware enabled (development mode)")
+	} else {
+		log.Println("CORS middleware disabled (production mode - handled by nginx)")
+	}
 
 	// Compress 中间件 - 响应压缩（对大于 1KB 的响应启用 gzip）
 	app.Use(middlewares.CompressMiddleware())
