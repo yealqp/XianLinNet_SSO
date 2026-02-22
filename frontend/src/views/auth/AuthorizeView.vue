@@ -307,19 +307,33 @@ const handleAuthorize = async () => {
       }
     })
 
+    console.log('Response status:', response.status)
+    console.log('Response headers:', Object.fromEntries(response.headers.entries()))
+
     if (!response.ok) {
-      const errorData = await response.json()
-      throw new Error(errorData.msg || '授权失败')
+      const errorText = await response.text()
+      console.error('Error response:', errorText)
+      try {
+        const errorData = JSON.parse(errorText)
+        throw new Error(errorData.msg || '授权失败')
+      } catch (e) {
+        throw new Error(`授权失败 (${response.status}): ${errorText}`)
+      }
     }
 
     const result = await response.json()
+
+    console.log('Authorization response:', result) // 添加调试日志
 
     // 后端返回重定向 URL 和授权码
     if (result.status === 'ok' && result.data) {
       const data = result.data
       
+      console.log('Authorization data:', data) // 添加调试日志
+      
       // 如果有重定向 URL，直接跳转
       if (data.redirect_uri) {
+        console.log('Redirecting to:', data.redirect_uri)
         window.location.href = data.redirect_uri
       } else if (data.code) {
         // 如果只返回授权码，手动构建重定向 URL
@@ -328,11 +342,14 @@ const handleAuthorize = async () => {
         if (state.value) {
           redirectUrl.searchParams.set('state', state.value)
         }
+        console.log('Redirecting to:', redirectUrl.toString())
         window.location.href = redirectUrl.toString()
       } else {
+        console.error('Invalid response data:', data)
         throw new Error('授权响应格式错误')
       }
     } else {
+      console.error('Authorization failed:', result)
       throw new Error(result.msg || '授权失败')
     }
   } catch (err: any) {

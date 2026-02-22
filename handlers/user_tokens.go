@@ -4,6 +4,8 @@
 package handlers
 
 import (
+	"fmt"
+	"log"
 	"strconv"
 	"time"
 
@@ -34,10 +36,30 @@ func HandleGetUserTokens() fiber.Handler {
 		}
 
 		var tokens []*models.Token
-		err = models.GetEngine().Where("user = ?", user.Username).Find(&tokens)
+		userIDStr := fmt.Sprintf("%d", userIDInt)
+		log.Printf("[DEBUG] Querying tokens with user = '%s' (type: %T)", userIDStr, userIDStr)
+
+		// Try with explicit CAST to ensure string comparison in PostgreSQL
+		err = models.GetEngine().Where(`"user" = CAST(? AS VARCHAR)`, userIDStr).Find(&tokens)
 		if err != nil {
+			log.Printf("[ERROR] Failed to query tokens for user %s (ID: %s): %v", user.Username, userIDStr, err)
 			return ctx.Status(fiber.StatusInternalServerError).JSON(types.ErrorResponse("获取Token列表失败"))
 		}
+
+		log.Printf("[DEBUG] GetUserTokens - User: %s (ID: %s), Found %d tokens", user.Username, userIDStr, len(tokens))
+
+		// Debug: Let's also check all tokens to see what's in the database
+		var allTokens []*models.Token
+		models.GetEngine().Limit(10).Find(&allTokens)
+		log.Printf("[DEBUG] Total tokens in database (first 10): %d", len(allTokens))
+		for i, t := range allTokens {
+			log.Printf("[DEBUG] Token %d: User='%s', Application='%s', ExpiresIn=%d", i, t.User, t.Application, t.ExpiresIn)
+		}
+
+		// Try direct SQL query to debug
+		var debugTokens []*models.Token
+		models.GetEngine().SQL(`SELECT * FROM "token" WHERE "user" = '1' LIMIT 5`).Find(&debugTokens)
+		log.Printf("[DEBUG] Direct SQL query found %d tokens", len(debugTokens))
 
 		tokenList := make([]map[string]interface{}, 0, len(tokens))
 		for _, token := range tokens {
@@ -75,6 +97,7 @@ func HandleGetUserTokens() fiber.Handler {
 			})
 		}
 
+		log.Printf("[DEBUG] Returning %d tokens", len(tokenList))
 		return ctx.JSON(types.SuccessResponse(tokenList))
 	}
 }
@@ -113,7 +136,8 @@ func HandleRevokeUserToken() fiber.Handler {
 			return ctx.Status(fiber.StatusNotFound).JSON(types.ErrorResponse("Token不存在"))
 		}
 
-		if token.User != user.Username {
+		userIDStr := fmt.Sprintf("%d", userIDInt)
+		if token.User != userIDStr {
 			return ctx.Status(fiber.StatusForbidden).JSON(types.ErrorResponse("无权撤销此Token"))
 		}
 
@@ -151,10 +175,14 @@ func HandleGetUserApplications() fiber.Handler {
 		}
 
 		var tokens []*models.Token
-		err = models.GetEngine().Where("user = ?", user.Username).Find(&tokens)
+		userIDStr := fmt.Sprintf("%d", userIDInt)
+		err = models.GetEngine().Where(`"user" = CAST(? AS VARCHAR)`, userIDStr).Find(&tokens)
 		if err != nil {
+			log.Printf("[ERROR] Failed to query tokens for user %s (ID: %s): %v", user.Username, userIDStr, err)
 			return ctx.Status(fiber.StatusInternalServerError).JSON(types.ErrorResponse("获取Token列表失败"))
 		}
+
+		log.Printf("[DEBUG] GetUserApplications - User: %s (ID: %s), Found %d tokens", user.Username, userIDStr, len(tokens))
 
 		appMap := make(map[string]map[string]interface{})
 		for _, token := range tokens {
@@ -222,6 +250,7 @@ func HandleGetUserApplications() fiber.Handler {
 			appList = append(appList, appInfo)
 		}
 
+		log.Printf("[DEBUG] Returning %d applications", len(appList))
 		return ctx.JSON(types.SuccessResponse(appList))
 	}
 }
