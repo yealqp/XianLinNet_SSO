@@ -26,11 +26,11 @@ func HandleGetUsers() fiber.Handler {
 		var err error
 
 		if owner != "" {
-			// 如果指定了 owner，只查询该 owner 的用户
-			err = models.GetEngine().Where("owner = ?", owner).Find(&users)
+			// 如果指定了 owner，只查询该 owner 的用户，按 ID 升序排序
+			err = models.GetEngine().Where("owner = ?", owner).OrderBy("id ASC").Find(&users)
 		} else {
-			// 否则查询所有用户
-			err = models.GetEngine().Find(&users)
+			// 否则查询所有用户，按 ID 升序排序
+			err = models.GetEngine().OrderBy("id ASC").Find(&users)
 		}
 
 		if err != nil {
