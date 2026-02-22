@@ -7,10 +7,10 @@ export const authApi = {
     return response.data.data || response.data
   },
 
-  async getUserInfo() {
+  async getUserInfo(): Promise<UserInfoResponse> {
     // 注意：/api/userinfo 端点直接返回用户信息对象，不使用 ApiResponse 包装
     // 这符合 OIDC UserInfo 端点标准
-    const response = await apiClient.get<UserInfoResponse>('/userinfo')
+    const response = await apiClient.getRaw<UserInfoResponse>('/userinfo')
     return response.data
   },
 

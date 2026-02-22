@@ -85,6 +85,11 @@ export class ApiClient {
     return this.instance.get(url, config)
   }
 
+  // 用于不使用 ApiResponse 包装的端点（如 OIDC UserInfo）
+  public async getRaw<T>(url: string, config?: AxiosRequestConfig): Promise<AxiosResponse<T>> {
+    return this.instance.get(url, config)
+  }
+
   public async post<T>(url: string, data?: unknown, config?: AxiosRequestConfig): Promise<AxiosResponse<ApiResponse<T>>> {
     return this.instance.post(url, data, config)
   }
