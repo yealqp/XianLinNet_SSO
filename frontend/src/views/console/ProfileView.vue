@@ -293,7 +293,7 @@ const loadData = async () => {
         email: user.email || '',
         qq: user.qq || '',
         avatar: user.avatar || user.picture || '',
-        isAdmin: user.is_admin || false,
+        isAdmin: (user as any).is_admin || false,
         isRealName: user.is_real_name || false
       }
       authStore.userInfo = normalizedUser as any

@@ -180,10 +180,11 @@ const loadRealNameInfo = async () => {
   try {
     const response = await authApi.getRealNameInfo()
     if (response.status === 'ok' && response.data) {
+      const data = response.data as any
       realNameInfo.value = {
-        isRealName: response.data.isRealName || false,
-        name: response.data.name || '',
-        idcard: response.data.idcard || ''
+        isRealName: data.isRealName || false,
+        name: data.name || '',
+        idcard: data.idcard || ''
       }
     }
   } catch (error) {
