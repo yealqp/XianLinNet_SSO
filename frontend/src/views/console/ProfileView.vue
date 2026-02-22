@@ -369,28 +369,32 @@ onMounted(() => {
   padding: 0;
 }
 
-/* 页面标题 */
+/* 页面头部 */
 .page-header {
   margin-bottom: 32px;
 }
 
 .page-title {
-  font-size: 28px;
+  font-size: 32px;
   font-weight: 700;
-  color: #1f1f1f;
+  color: #1E293B;
   margin: 0 0 8px 0;
   display: flex;
   align-items: center;
+  background: linear-gradient(135deg, #2563EB 0%, #3B82F6 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
 
 .page-title .title-icon {
   margin-right: 12px;
-  color: #667eea;
+  color: #2563EB;
 }
 
 .page-subtitle {
   font-size: 15px;
-  color: #8c8c8c;
+  color: #64748B;
   margin: 0;
 }
 
@@ -398,10 +402,18 @@ onMounted(() => {
 .avatar-card,
 .status-card,
 .form-card {
-  border-radius: 16px;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+  border-radius: 20px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04), 0 1px 2px rgba(0, 0, 0, 0.06);
   margin-bottom: 24px;
   overflow: hidden;
+  border: 1px solid rgba(226, 232, 240, 0.8);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.avatar-card:hover,
+.status-card:hover,
+.form-card:hover {
+  box-shadow: 0 8px 24px rgba(37, 99, 235, 0.08), 0 2px 6px rgba(37, 99, 235, 0.04);
 }
 
 .card-title {
@@ -409,12 +421,12 @@ onMounted(() => {
   align-items: center;
   font-size: 16px;
   font-weight: 600;
-  color: #1f1f1f;
+  color: #1E293B;
 }
 
 .card-title .title-icon {
   margin-right: 8px;
-  color: #667eea;
+  color: #2563EB;
 }
 
 /* 头像卡片 */
@@ -430,8 +442,8 @@ onMounted(() => {
 }
 
 .main-avatar {
-  border: 4px solid #f0f0f0;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+  border: 4px solid #F1F5F9;
+  box-shadow: 0 4px 16px rgba(37, 99, 235, 0.15);
 }
 
 .avatar-badge {
@@ -456,13 +468,13 @@ onMounted(() => {
 .user-name {
   font-size: 22px;
   font-weight: 600;
-  color: #1f1f1f;
+  color: #1E293B;
   margin: 0 0 8px 0;
 }
 
 .user-email {
   font-size: 14px;
-  color: #8c8c8c;
+  color: #64748B;
   margin: 0 0 16px 0;
 }
 
@@ -470,11 +482,12 @@ onMounted(() => {
   display: inline-flex;
   align-items: center;
   padding: 6px 16px;
-  background: #f0f0f0;
+  background: linear-gradient(135deg, #F8FAFC 0%, #F1F5F9 100%);
   border-radius: 20px;
   font-size: 13px;
-  color: #595959;
+  color: #64748B;
   gap: 6px;
+  border: 1px solid #E2E8F0;
 }
 
 /* 状态卡片 */
@@ -489,7 +502,7 @@ onMounted(() => {
   justify-content: space-between;
   align-items: center;
   padding: 12px 0;
-  border-bottom: 1px solid #f0f0f0;
+  border-bottom: 1px solid #F1F5F9;
 }
 
 .status-item:last-child {
@@ -498,13 +511,13 @@ onMounted(() => {
 
 .status-label {
   font-size: 14px;
-  color: #595959;
+  color: #64748B;
   font-weight: 500;
 }
 
 .status-value {
   font-size: 14px;
-  color: #1f1f1f;
+  color: #1E293B;
 }
 
 /* 表单卡片 */
@@ -517,32 +530,33 @@ onMounted(() => {
 }
 
 .form-input {
-  border-radius: 8px;
+  border-radius: 12px;
   transition: all 0.3s ease;
+  border-color: #E2E8F0;
 }
 
 .form-input:hover {
-  border-color: #667eea;
+  border-color: #3B82F6;
 }
 
 .form-input:focus,
 .form-input:focus-within {
-  border-color: #667eea;
-  box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.1);
+  border-color: #2563EB;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
 }
 
 .input-icon {
-  color: #8c8c8c;
+  color: #64748B;
 }
 
 .help-icon {
-  color: #bfbfbf;
+  color: #94A3B8;
   cursor: help;
 }
 
 .form-hint {
   font-size: 13px;
-  color: #8c8c8c;
+  color: #64748B;
 }
 
 /* 头像预览框 */
@@ -550,14 +564,15 @@ onMounted(() => {
   display: flex;
   align-items: center;
   padding: 20px;
-  background: linear-gradient(135deg, #667eea15 0%, #764ba215 100%);
-  border-radius: 12px;
+  background: linear-gradient(135deg, #EFF6FF 0%, #DBEAFE 100%);
+  border-radius: 16px;
   gap: 20px;
+  border: 1px solid #BFDBFE;
 }
 
 .preview-avatar {
   border: 3px solid #ffffff;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 2px 8px rgba(37, 99, 235, 0.15);
 }
 
 .preview-info {
@@ -567,52 +582,61 @@ onMounted(() => {
 .preview-label {
   font-size: 14px;
   font-weight: 600;
-  color: #1f1f1f;
+  color: #1E293B;
   margin-bottom: 4px;
 }
 
 .preview-source {
   font-size: 13px;
-  color: #667eea;
+  color: #2563EB;
 }
 
 /* 操作按钮 */
 .form-actions {
   margin-top: 32px;
   padding-top: 24px;
-  border-top: 1px solid #f0f0f0;
+  border-top: 1px solid #F1F5F9;
 }
 
 .submit-btn {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #2563EB 0%, #3B82F6 100%);
   border: none;
   font-weight: 500;
-  height: 44px;
+  height: 48px;
   padding: 0 32px;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2);
 }
 
 .submit-btn:hover {
-  background: linear-gradient(135deg, #5568d3 0%, #6a3f8f 100%);
+  background: linear-gradient(135deg, #1d4ed8 0%, #2563EB 100%);
   transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+  box-shadow: 0 6px 16px rgba(37, 99, 235, 0.3);
 }
 
 .reset-btn {
-  height: 44px;
+  height: 48px;
   padding: 0 24px;
-  border-radius: 8px;
+  border-radius: 12px;
+  border: 1px solid #E2E8F0;
+}
+
+.reset-btn:hover {
+  border-color: #3B82F6;
+  color: #2563EB;
 }
 
 /* 深度样式覆盖 */
 :deep(.ant-form-item-label > label) {
   font-size: 14px;
   font-weight: 600;
-  color: #1f1f1f;
+  color: #1E293B;
 }
 
 :deep(.ant-input-disabled) {
-  background: #fafafa;
-  color: #8c8c8c;
+  background: #F8FAFC;
+  color: #64748B;
+  border-color: #E2E8F0;
 }
 
 /* 响应式 */
