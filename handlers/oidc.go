@@ -136,8 +136,9 @@ func HandleUserInfo() fiber.Handler {
 		userInfo["is_real_name"] = user.IsRealName
 		userInfo["is_admin"] = user.IsAdmin
 
-		// 返回标准的 ApiResponse 格式
-		return ctx.JSON(types.SuccessResponse(userInfo))
+		// 直接返回用户信息，不使用 ApiResponse 包装
+		// 符合 OIDC UserInfo 端点标准
+		return ctx.JSON(userInfo)
 	}
 }
 
