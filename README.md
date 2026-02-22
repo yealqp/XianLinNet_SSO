@@ -6,7 +6,7 @@
 
 ## English
 
-A full-featured OAuth 2.0 / OpenID Connect server built with Go (Beego) and Vue 3, supporting user authentication, authorization, role-based access control (RBAC), and real-name verification.
+A full-featured OAuth 2.0 / OpenID Connect server built with Go (Fiber v2) and Vue 3, supporting user authentication, authorization, role-based access control (RBAC), and real-name verification.
 
 ### Features
 
@@ -21,15 +21,18 @@ A full-featured OAuth 2.0 / OpenID Connect server built with Go (Beego) and Vue 
 - 🔒 RSA encryption for sensitive data
 - 🌐 CORS support for cross-origin requests
 - 📱 Real-name verification API integration (optional)
+- ⚡ High-performance Fiber v2 web framework
+- 🛡️ Request timeout and connection pool management
 
 ### Tech Stack
 
 **Backend:**
 - Go 1.23+
-- Beego v2 web framework
+- Fiber v2 web framework (Express-inspired)
 - XORM for database operations
 - JWT for token management
 - Redis for caching (optional)
+- PostgreSQL connection pooling
 
 **Frontend:**
 - Vue 3 with TypeScript
@@ -109,42 +112,58 @@ Edit `.env` to configure:
 
 **Required Settings:**
 - Database configuration (PostgreSQL):
-  - `dbHost` - PostgreSQL server address (default: localhost)
-  - `dbPort` - PostgreSQL port (default: 5432)
-  - `dbUser` - Database username
-  - `dbPassword` - Database password
-  - `dbName` - Database name
-  - `dbSSLMode` - SSL mode (disable/require/verify-ca/verify-full)
-- `adminEmail`, `adminPassword`, `adminUsername` - Initial admin user credentials
-- `jwtSecret` - JWT signing key (minimum 32 characters)
+  - `DB_HOST` - PostgreSQL server address (default: localhost)
+  - `DB_PORT` - PostgreSQL port (default: 5432)
+  - `DB_USER` - Database username
+  - `DB_PASSWORD` - Database password
+  - `DB_NAME` - Database name
+  - `DB_SSLMODE` - SSL mode (disable/require/verify-ca/verify-full)
+- Database connection pool (recommended):
+  - `DB_MAX_OPEN_CONNS` - Maximum open connections (default: 50)
+  - `DB_MAX_IDLE_CONNS` - Maximum idle connections (default: 10)
+  - `DB_CONN_MAX_LIFETIME` - Connection max lifetime (default: 1h)
+  - `DB_CONN_MAX_IDLE_TIME` - Connection max idle time (default: 10m)
+  - `DB_QUERY_TIMEOUT` - Query timeout (default: 5s)
+- `ADMIN_EMAIL`, `ADMIN_PASSWORD`, `ADMIN_USERNAME` - Initial admin user credentials
+- `JWT_SECRET` - JWT signing key (minimum 32 characters)
 
 **Database Configuration Example:**
-```ini
-dbHost = localhost
-dbPort = 5432
-dbUser = postgres
-dbPassword = password
-dbName = oauth_server
-dbSSLMode = disable
+```env
+DB_HOST=localhost
+DB_PORT=5432
+DB_USER=postgres
+DB_PASSWORD=password
+DB_NAME=oauth_server
+DB_SSLMODE=disable
+DB_MAX_OPEN_CONNS=50
+DB_MAX_IDLE_CONNS=10
+DB_CONN_MAX_LIFETIME=1h
+DB_CONN_MAX_IDLE_TIME=10m
+DB_QUERY_TIMEOUT=5s
 ```
 
 See `docs/postgresql-setup.md` for detailed setup instructions
 
 **Optional Settings:**
-- Redis cache configuration
+- Redis cache configuration (with timeout settings)
 - SMTP email settings
 - CORS and origin settings
 - Real-name verification API
+- Server timeouts (READ_TIMEOUT, WRITE_TIMEOUT)
 
 ### Project Structure
 
 ```
 .
-├── controllers/       # HTTP request handlers
+├── handlers/         # HTTP request handlers (Fiber)
 ├── models/           # Database models and operations
 ├── services/         # Business logic layer
-├── routers/          # Route definitions
+├── routers/          # Route definitions (Fiber)
+├── middlewares/      # Fiber middlewares (CORS, Auth, Logger, etc.)
+├── types/            # Type definitions and response structures
+├── config/           # Configuration management
 ├── keys/             # RSA key pairs for encryption
+├── docs/             # Documentation
 ├── frontend/         # Vue 3 frontend application
 │   ├── src/
 │   │   ├── api/      # API client
@@ -158,23 +177,70 @@ See `docs/postgresql-setup.md` for detailed setup instructions
 
 ### API Endpoints
 
+**Authentication:**
 - `POST /api/auth/login` - User login
 - `POST /api/auth/register` - User registration
-- `POST /api/auth/logout` - User logout
-- `GET /api/auth/authorize` - OAuth authorization endpoint
-- `POST /api/auth/token` - OAuth token endpoint
-- `GET /api/admin/*` - Admin management endpoints
-- `GET /api/user/*` - User profile endpoints
+- `POST /api/auth/send-code` - Send verification code
+- `POST /api/auth/reset-password` - Reset password
+- `GET /api/auth/application-info` - Get application info
+
+**OAuth 2.0 / OIDC:**
+- `GET /oauth/authorize` - OAuth authorization endpoint
+- `POST /oauth/authorize` - OAuth authorization (POST)
+- `POST /api/oauth/token` - OAuth token endpoint
+- `POST /api/oauth/introspect` - Token introspection
+- `POST /api/oauth/revoke` - Token revocation
+- `GET /api/userinfo` - OIDC UserInfo endpoint
+- `GET /.well-known/openid-configuration` - OIDC Discovery
+- `GET /.well-known/jwks` - JSON Web Key Set
+
+**User Management (Authenticated):**
+- `POST /api/auth/update-profile` - Update user profile
+- `POST /api/realname/submit` - Submit real-name verification
+- `GET /api/realname/verify` - Get real-name info
+
+**Admin Endpoints (Admin Only):**
+- `GET /api/admin/users` - List users
+- `POST /api/admin/users` - Create user
+- `GET /api/admin/applications` - List applications
+- `GET /api/admin/tokens` - List tokens
+- `GET /api/admin/stats` - System statistics
+- `GET /api/admin/system` - System information
+- `POST /api/admin/cache/clear` - Clear cache
+
+**Health Check:**
+- `GET /health` - Server health status
 
 ### Default Admin Account
 
 After running `go run main.go init`, an admin account will be created using the credentials from `.env`:
 
-- Email: As configured in `adminEmail`
-- Password: As configured in `adminPassword`
-- Username: As configured in `adminUsername`
+- Email: As configured in `ADMIN_EMAIL`
+- Password: As configured in `ADMIN_PASSWORD`
+- Username: As configured in `ADMIN_USERNAME`
 
 **Important:** Change these default credentials immediately after first login!
+
+### Performance & Reliability
+
+**Connection Pool Management:**
+- Database connection pooling with configurable limits
+- Redis connection pooling with timeout controls
+- Automatic connection lifecycle management
+
+**Timeout Protection:**
+- Request read/write timeouts (configurable)
+- Database query timeout (default: 5s)
+- Redis operation timeout (default: 3s)
+- Graceful shutdown support
+
+**Monitoring:**
+- Slow query logging (>100ms)
+- Request/response logging
+- Error tracking and recovery
+- Health check endpoint
+
+See `docs/backend-hang-fix.md` for detailed performance optimization guide.
 
 ### Development
 
@@ -197,7 +263,7 @@ Apache License 2.0
 
 ## 中文
 
-一个功能完整的 OAuth 2.0 / OpenID Connect 服务器，使用 Go (Beego) 和 Vue 3 构建，支持用户认证、授权、基于角色的访问控制 (RBAC) 和实名验证。
+一个功能完整的 OAuth 2.0 / OpenID Connect 服务器，使用 Go (Fiber v2) 和 Vue 3 构建，支持用户认证、授权、基于角色的访问控制 (RBAC) 和实名验证。
 
 ### 功能特性
 
@@ -212,15 +278,18 @@ Apache License 2.0
 - 🔒 敏感数据 RSA 加密
 - 🌐 支持跨域请求 (CORS)
 - 📱 实名验证 API 集成（可选）
+- ⚡ 高性能 Fiber v2 Web 框架
+- 🛡️ 请求超时和连接池管理
 
 ### 技术栈
 
 **后端：**
 - Go 1.23+
-- Beego v2 Web 框架
+- Fiber v2 Web 框架（Express 风格）
 - XORM 数据库操作
 - JWT 令牌管理
 - Redis 缓存（可选）
+- PostgreSQL 连接池管理
 
 **前端：**
 - Vue 3 + TypeScript
@@ -300,42 +369,58 @@ pnpm build
 
 **必需设置：**
 - 数据库配置（PostgreSQL）：
-  - `dbHost` - PostgreSQL 服务器地址（默认：localhost）
-  - `dbPort` - PostgreSQL 端口（默认：5432）
-  - `dbUser` - 数据库用户名
-  - `dbPassword` - 数据库密码
-  - `dbName` - 数据库名称
-  - `dbSSLMode` - SSL 模式（disable/require/verify-ca/verify-full）
-- `adminEmail`、`adminPassword`、`adminUsername` - 初始管理员用户凭据
-- `jwtSecret` - JWT 签名密钥（至少 32 个字符）
+  - `DB_HOST` - PostgreSQL 服务器地址（默认：localhost）
+  - `DB_PORT` - PostgreSQL 端口（默认：5432）
+  - `DB_USER` - 数据库用户名
+  - `DB_PASSWORD` - 数据库密码
+  - `DB_NAME` - 数据库名称
+  - `DB_SSLMODE` - SSL 模式（disable/require/verify-ca/verify-full）
+- 数据库连接池（推荐配置）：
+  - `DB_MAX_OPEN_CONNS` - 最大连接数（默认：50）
+  - `DB_MAX_IDLE_CONNS` - 最大空闲连接数（默认：10）
+  - `DB_CONN_MAX_LIFETIME` - 连接最大生命周期（默认：1h）
+  - `DB_CONN_MAX_IDLE_TIME` - 连接最大空闲时间（默认：10m）
+  - `DB_QUERY_TIMEOUT` - 查询超时时间（默认：5s）
+- `ADMIN_EMAIL`、`ADMIN_PASSWORD`、`ADMIN_USERNAME` - 初始管理员用户凭据
+- `JWT_SECRET` - JWT 签名密钥（至少 32 个字符）
 
 **数据库配置示例：**
-```ini
-dbHost = localhost
-dbPort = 5432
-dbUser = postgres
-dbPassword = password
-dbName = oauth_server
-dbSSLMode = disable
+```env
+DB_HOST=localhost
+DB_PORT=5432
+DB_USER=postgres
+DB_PASSWORD=password
+DB_NAME=oauth_server
+DB_SSLMODE=disable
+DB_MAX_OPEN_CONNS=50
+DB_MAX_IDLE_CONNS=10
+DB_CONN_MAX_LIFETIME=1h
+DB_CONN_MAX_IDLE_TIME=10m
+DB_QUERY_TIMEOUT=5s
 ```
 
 详细设置说明请参见 `docs/postgresql-setup.md`
 
 **可选设置：**
-- Redis 缓存配置
+- Redis 缓存配置（包含超时设置）
 - SMTP 邮件设置
 - CORS 和源站设置
 - 实名验证 API
+- 服务器超时设置（READ_TIMEOUT、WRITE_TIMEOUT）
 
 ### 项目结构
 
 ```
 .
-├── controllers/       # HTTP 请求处理器
+├── handlers/         # HTTP 请求处理器（Fiber）
 ├── models/           # 数据库模型和操作
 ├── services/         # 业务逻辑层
-├── routers/          # 路由定义
+├── routers/          # 路由定义（Fiber）
+├── middlewares/      # Fiber 中间件（CORS、认证、日志等）
+├── types/            # 类型定义和响应结构
+├── config/           # 配置管理
 ├── keys/             # RSA 密钥对（用于加密）
+├── docs/             # 文档
 ├── frontend/         # Vue 3 前端应用
 │   ├── src/
 │   │   ├── api/      # API 客户端
@@ -349,23 +434,70 @@ dbSSLMode = disable
 
 ### API 端点
 
+**认证相关：**
 - `POST /api/auth/login` - 用户登录
 - `POST /api/auth/register` - 用户注册
-- `POST /api/auth/logout` - 用户登出
-- `GET /api/auth/authorize` - OAuth 授权端点
-- `POST /api/auth/token` - OAuth 令牌端点
-- `GET /api/admin/*` - 管理员管理端点
-- `GET /api/user/*` - 用户资料端点
+- `POST /api/auth/send-code` - 发送验证码
+- `POST /api/auth/reset-password` - 重置密码
+- `GET /api/auth/application-info` - 获取应用信息
+
+**OAuth 2.0 / OIDC：**
+- `GET /oauth/authorize` - OAuth 授权端点
+- `POST /oauth/authorize` - OAuth 授权（POST）
+- `POST /api/oauth/token` - OAuth 令牌端点
+- `POST /api/oauth/introspect` - 令牌内省
+- `POST /api/oauth/revoke` - 令牌撤销
+- `GET /api/userinfo` - OIDC 用户信息端点
+- `GET /.well-known/openid-configuration` - OIDC 发现
+- `GET /.well-known/jwks` - JSON Web 密钥集
+
+**用户管理（需认证）：**
+- `POST /api/auth/update-profile` - 更新用户资料
+- `POST /api/realname/submit` - 提交实名认证
+- `GET /api/realname/verify` - 获取实名信息
+
+**管理员端点（仅管理员）：**
+- `GET /api/admin/users` - 用户列表
+- `POST /api/admin/users` - 创建用户
+- `GET /api/admin/applications` - 应用列表
+- `GET /api/admin/tokens` - 令牌列表
+- `GET /api/admin/stats` - 系统统计
+- `GET /api/admin/system` - 系统信息
+- `POST /api/admin/cache/clear` - 清除缓存
+
+**健康检查：**
+- `GET /health` - 服务器健康状态
 
 ### 默认管理员账户
 
 运行 `go run main.go init` 后，将使用 `.env` 中的凭据创建管理员账户：
 
-- 邮箱：在 `adminEmail` 中配置
-- 密码：在 `adminPassword` 中配置
-- 用户名：在 `adminUsername` 中配置
+- 邮箱：在 `ADMIN_EMAIL` 中配置
+- 密码：在 `ADMIN_PASSWORD` 中配置
+- 用户名：在 `ADMIN_USERNAME` 中配置
 
 **重要提示：** 首次登录后请立即更改这些默认凭据！
+
+### 性能与可靠性
+
+**连接池管理：**
+- 数据库连接池，可配置连接限制
+- Redis 连接池，带超时控制
+- 自动连接生命周期管理
+
+**超时保护：**
+- 请求读写超时（可配置）
+- 数据库查询超时（默认：5s）
+- Redis 操作超时（默认：3s）
+- 优雅关闭支持
+
+**监控：**
+- 慢查询日志（>100ms）
+- 请求/响应日志
+- 错误跟踪和恢复
+- 健康检查端点
+
+详细的性能优化指南请参见 `docs/backend-hang-fix.md`。
 
 ### 开发
 

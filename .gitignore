@@ -19,7 +19,7 @@ vendor/
 go.work
 *keys*
 # Database files (PostgreSQL only - no local DB files)
-
+test.py
 # Docker volumes (data is in named volumes)
 .docker/
 
