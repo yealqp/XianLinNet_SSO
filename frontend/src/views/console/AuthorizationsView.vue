@@ -87,7 +87,7 @@
             :columns="tokenColumns"
             :data-source="tokens"
             :pagination="{ pageSize: 10 }"
-            :row-key="(record) => record.name"
+            :row-key="(record: any) => record.name"
             class="tokens-table"
           >
             <template #bodyCell="{ column, record }">
@@ -193,7 +193,7 @@ const loadApplications = async () => {
   try {
     const response = await authApi.getUserApplications()
     if (response.status === 'ok' && response.data) {
-      applications.value = response.data
+      applications.value = response.data as unknown as any[]
     }
   } catch (error: any) {
     console.error('Failed to load applications:', error)
@@ -208,7 +208,7 @@ const loadTokens = async () => {
   try {
     const response = await authApi.getUserTokens()
     if (response.status === 'ok' && response.data) {
-      tokens.value = response.data
+      tokens.value = response.data as unknown as any[]
     }
   } catch (error: any) {
     console.error('Failed to load tokens:', error)
