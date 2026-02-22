@@ -4,6 +4,8 @@
 package handlers
 
 import (
+	"log"
+
 	"github.com/gofiber/fiber/v2"
 	"github.com/oauth-server/oauth-server/services"
 	"github.com/oauth-server/oauth-server/types"
@@ -14,11 +16,18 @@ import (
 // Requirements: 5.4, 5.5, 5.6, 5.8, 6.1, 6.2
 func HandleToken() fiber.Handler {
 	return func(ctx *fiber.Ctx) error {
+		// 调试日志
+		log.Printf("[DEBUG] Token request received - Method: %s, Content-Type: %s", ctx.Method(), ctx.Get("Content-Type"))
+		log.Printf("[DEBUG] Request body: %s", string(ctx.Body()))
+
 		// 解析 TokenRequest
 		var req types.TokenRequest
 		if err := ctx.BodyParser(&req); err != nil {
+			log.Printf("[DEBUG] Body parse error: %v", err)
 			return ctx.Status(fiber.StatusBadRequest).JSON(types.ErrorResponse("无效的请求数据"))
 		}
+
+		log.Printf("[DEBUG] Parsed request: %+v", req)
 
 		// 验证必需参数
 		if req.GrantType == "" {

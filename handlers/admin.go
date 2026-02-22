@@ -18,11 +18,21 @@ import (
 // Requirements: 8.1
 func HandleGetUsers() fiber.Handler {
 	return func(ctx *fiber.Ctx) error {
-		// 获取 owner 参数（可选，默认为 "built-in"）
-		owner := ctx.Query("owner", "built-in")
+		// 获取 owner 参数（可选）
+		owner := ctx.Query("owner", "")
 
 		// 获取用户列表
-		users, err := models.GetUsers(owner)
+		var users []*models.User
+		var err error
+
+		if owner != "" {
+			// 如果指定了 owner，只查询该 owner 的用户
+			err = models.GetEngine().Where("owner = ?", owner).Find(&users)
+		} else {
+			// 否则查询所有用户
+			err = models.GetEngine().Find(&users)
+		}
+
 		if err != nil {
 			return ctx.Status(fiber.StatusInternalServerError).JSON(types.ErrorResponse("获取用户列表失败"))
 		}
@@ -288,12 +298,21 @@ func HandleDeleteUser() fiber.Handler {
 // Requirements: 8.5
 func HandleGetApplications() fiber.Handler {
 	return func(ctx *fiber.Ctx) error {
-		// 获取 owner 参数（可选，默认为 "built-in"）
-		owner := ctx.Query("owner", "built-in")
+		// 获取 owner 参数（可选）
+		owner := ctx.Query("owner", "")
 
 		// 获取应用列表
 		var applications []*models.Application
-		err := models.GetEngine().Where("owner = ?", owner).Find(&applications)
+		var err error
+
+		if owner != "" {
+			// 如果指定了 owner，只查询该 owner 的应用
+			err = models.GetEngine().Where("owner = ?", owner).Find(&applications)
+		} else {
+			// 否则查询所有应用
+			err = models.GetEngine().Find(&applications)
+		}
+
 		if err != nil {
 			return ctx.Status(fiber.StatusInternalServerError).JSON(types.ErrorResponse("获取应用列表失败"))
 		}
@@ -479,12 +498,21 @@ func HandleDeleteApplication() fiber.Handler {
 // Requirements: 8.9
 func HandleGetTokens() fiber.Handler {
 	return func(ctx *fiber.Ctx) error {
-		// 获取 owner 参数（可选，默认为 "built-in"）
-		owner := ctx.Query("owner", "built-in")
+		// 获取 owner 参数（可选）
+		owner := ctx.Query("owner", "")
 
 		// 获取 Token 列表
 		var tokens []*models.Token
-		err := models.GetEngine().Where("owner = ?", owner).Find(&tokens)
+		var err error
+
+		if owner != "" {
+			// 如果指定了 owner，只查询该 owner 的 Token
+			err = models.GetEngine().Where("owner = ?", owner).Find(&tokens)
+		} else {
+			// 否则查询所有 Token
+			err = models.GetEngine().Find(&tokens)
+		}
+
 		if err != nil {
 			return ctx.Status(fiber.StatusInternalServerError).JSON(types.ErrorResponse("获取Token列表失败"))
 		}
@@ -615,11 +643,20 @@ func HandleGetStats() fiber.Handler {
 			return ctx.Status(fiber.StatusInternalServerError).JSON(types.ErrorResponse("统计Token数失败"))
 		}
 
+		// 统计活动 Token 数（未过期的）
+		var activeTokenCount int64
+		activeTokenCount, err = models.GetEngine().Where("expires_at > ?", time.Now().Unix()).Count(&models.Token{})
+		if err != nil {
+			// 如果查询失败，使用总数作为活动数
+			activeTokenCount = tokenCount
+		}
+
 		// 构造响应
 		stats := map[string]interface{}{
-			"userCount":  userCount,
-			"appCount":   appCount,
-			"tokenCount": tokenCount,
+			"userCount":        userCount,
+			"applicationCount": appCount,
+			"tokenCount":       tokenCount,
+			"activeTokenCount": activeTokenCount,
 		}
 
 		return ctx.JSON(types.SuccessResponse(stats))
@@ -630,13 +667,20 @@ func HandleGetStats() fiber.Handler {
 // Requirements: 8.13
 func HandleGetSystemInfo() fiber.Handler {
 	return func(ctx *fiber.Ctx) error {
+		// 计算运行时间（秒）
+		uptime := int64(time.Since(services.ServerStartTime).Seconds())
+
+		// 检查 Redis 连接状态
+		redisConnected := false
+		if err := services.PingRedis(); err == nil {
+			redisConnected = true
+		}
+
 		// 获取系统信息
 		systemInfo := map[string]interface{}{
-			"version":    "1.0.0",
-			"framework":  "Fiber v2",
-			"database":   "PostgreSQL",
-			"cache":      "Redis",
-			"serverTime": time.Now().Format("2006-01-02T15:04:05Z07:00"),
+			"version":        "1.0.0",
+			"uptime":         uptime,
+			"redisConnected": redisConnected,
 		}
 
 		return ctx.JSON(types.SuccessResponse(systemInfo))

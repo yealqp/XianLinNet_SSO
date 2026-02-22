@@ -9,9 +9,10 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"os"
+	"strconv"
 	"time"
 
-	"github.com/beego/beego/v2/server/web"
 	"github.com/oauth-server/oauth-server/models"
 )
 
@@ -31,13 +32,13 @@ type RealNameVerifyResponse struct {
 // VerifyRealName 调用实名认证 API 验证身份证信息
 func VerifyRealName(name, idcard string) (*RealNameVerifyResponse, error) {
 	// 检查是否启用实名认证
-	enabled, _ := web.AppConfig.Bool("verifyApiEnabled")
+	enabled, _ := strconv.ParseBool(os.Getenv("VERIFY_API_ENABLED"))
 	if !enabled {
 		return nil, fmt.Errorf("real name verification is disabled")
 	}
 
 	// 获取 API 地址
-	apiUrl, _ := web.AppConfig.String("verifyApiUrl")
+	apiUrl := os.Getenv("VERIFY_API_URL")
 	if apiUrl == "" {
 		apiUrl = "http://localhost:3000"
 	}
@@ -120,15 +121,6 @@ func UpdateUserRealNameStatus(userId int64, isRealName bool, name, idcard string
 		return err
 	}
 
-	// 如果实名认证成功，升级用户角色
-	if isRealName {
-		err = upgradeUserRole(user)
-		if err != nil {
-			// 记录错误但不影响实名状态更新
-			fmt.Printf("Warning: Failed to upgrade user role: %v\n", err)
-		}
-	}
-
 	return nil
 }
 
@@ -177,34 +169,16 @@ func checkRealNameDuplicate(currentUserId int64, name, idcard string) (bool, err
 	return false, nil
 }
 
-// upgradeUserRole 升级用户角色（从未实名用户到普通用户）
-func upgradeUserRole(user *models.User) error {
-	// 移除未实名用户角色
-	_, err := models.RemoveUserRole(user.Id, "admin", "unverified-user")
-	if err != nil {
-		// Log error but continue
-		fmt.Printf("Warning: Failed to remove unverified-user role: %v\n", err)
-	}
-
-	// 添加普通用户角色
-	_, err = models.AddUserRole(user.Id, "admin", "normal-user")
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
-// SendVerificationCodeForRealName 发送实名认证验证码
+// GetDecryptedRealName 获取解密后的真实姓名（仅供管理员使用）
 func SendVerificationCodeForRealName(target, codeType string) error {
 	// 检查是否启用实名认证
-	enabled, _ := web.AppConfig.Bool("verifyApiEnabled")
+	enabled, _ := strconv.ParseBool(os.Getenv("VERIFY_API_ENABLED"))
 	if !enabled {
 		return fmt.Errorf("real name verification is disabled")
 	}
 
 	// 获取 API 地址
-	apiUrl, _ := web.AppConfig.String("verifyApiUrl")
+	apiUrl := os.Getenv("VERIFY_API_URL")
 	if apiUrl == "" {
 		apiUrl = "http://localhost:3000"
 	}
@@ -268,13 +242,13 @@ func SendVerificationCodeForRealName(target, codeType string) error {
 // VerifyCodeForRealName 验证实名认证验证码
 func VerifyCodeForRealName(target, code, codeType string) (bool, error) {
 	// 检查是否启用实名认证
-	enabled, _ := web.AppConfig.Bool("verifyApiEnabled")
+	enabled, _ := strconv.ParseBool(os.Getenv("VERIFY_API_ENABLED"))
 	if !enabled {
 		return false, fmt.Errorf("real name verification is disabled")
 	}
 
 	// 获取 API 地址
-	apiUrl, _ := web.AppConfig.String("verifyApiUrl")
+	apiUrl := os.Getenv("VERIFY_API_URL")
 	if apiUrl == "" {
 		apiUrl = "http://localhost:3000"
 	}

@@ -28,12 +28,17 @@ type ServerConfig struct {
 
 // DatabaseConfig 数据库配置
 type DatabaseConfig struct {
-	Host     string
-	Port     string
-	Name     string
-	User     string
-	Password string
-	SSLMode  string
+	Host            string
+	Port            string
+	Name            string
+	User            string
+	Password        string
+	SSLMode         string
+	MaxOpenConns    int           // 最大连接数
+	MaxIdleConns    int           // 最大空闲连接数
+	ConnMaxLifetime time.Duration // 连接最大生命周期
+	ConnMaxIdleTime time.Duration // 连接最大空闲时间
+	QueryTimeout    time.Duration // 查询超时时间
 }
 
 // RedisConfig Redis 配置
@@ -99,12 +104,17 @@ func LoadConfig() (*Config, error) {
 			BodyLimit:    getIntEnv("BODY_LIMIT", 4*1024*1024), // 4MB
 		},
 		Database: DatabaseConfig{
-			Host:     getEnv("DB_HOST", "localhost"),
-			Port:     getEnv("DB_PORT", "5432"),
-			Name:     getEnv("DB_NAME", "oauth_server"),
-			User:     getEnv("DB_USER", "postgres"),
-			Password: getEnv("DB_PASSWORD", ""),
-			SSLMode:  getEnv("DB_SSLMODE", "disable"),
+			Host:            getEnv("DB_HOST", "localhost"),
+			Port:            getEnv("DB_PORT", "5432"),
+			Name:            getEnv("DB_NAME", "oauth_server"),
+			User:            getEnv("DB_USER", "postgres"),
+			Password:        getEnv("DB_PASSWORD", ""),
+			SSLMode:         getEnv("DB_SSLMODE", "disable"),
+			MaxOpenConns:    getIntEnv("DB_MAX_OPEN_CONNS", 100),
+			MaxIdleConns:    getIntEnv("DB_MAX_IDLE_CONNS", 10),
+			ConnMaxLifetime: getDurationEnv("DB_CONN_MAX_LIFETIME", 1*time.Hour),
+			ConnMaxIdleTime: getDurationEnv("DB_CONN_MAX_IDLE_TIME", 10*time.Minute),
+			QueryTimeout:    getDurationEnv("DB_QUERY_TIMEOUT", 5*time.Second),
 		},
 		Redis: RedisConfig{
 			Host:     getEnv("REDIS_HOST", "localhost"),

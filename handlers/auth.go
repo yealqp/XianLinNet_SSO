@@ -46,8 +46,8 @@ func HandleLogin() fiber.Handler {
 		}
 
 		// 获取默认应用以生成 token
-		// 使用内置应用 "built-in/app-built-in"
-		application, err := models.GetApplication("built-in", "app-built-in")
+		// 使用内置应用 "admin/app-built-in"
+		application, err := models.GetApplication("admin", "app-built-in")
 		if err != nil {
 			return ctx.Status(fiber.StatusInternalServerError).JSON(types.ErrorResponse("获取应用信息失败"))
 		}
@@ -368,9 +368,18 @@ func HandleAuthorize() fiber.Handler {
 				return ctx.Status(fiber.StatusBadRequest).JSON(types.ErrorResponse(codeResp.Message))
 			}
 
-			// 重定向到 redirect_uri?code=xxx&state=xxx
-			redirectURL := fmt.Sprintf("%s?code=%s&state=%s", redirectURI, codeResp.Code, state)
-			return ctx.Redirect(redirectURL, fiber.StatusFound)
+			// 构建重定向 URL
+			redirectURL := fmt.Sprintf("%s?code=%s", redirectURI, codeResp.Code)
+			if state != "" {
+				redirectURL += fmt.Sprintf("&state=%s", state)
+			}
+
+			// 返回 JSON 响应，包含重定向 URL 和授权码
+			return ctx.JSON(types.SuccessResponse(map[string]interface{}{
+				"code":         codeResp.Code,
+				"redirect_uri": redirectURL,
+				"state":        state,
+			}))
 		}
 
 		return ctx.Status(fiber.StatusMethodNotAllowed).JSON(types.ErrorResponse("不支持的请求方法"))

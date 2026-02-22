@@ -284,10 +284,10 @@ const handleAuthorize = async () => {
       params.append('code_challenge', codeChallenge.value)
     }
 
-    // 调用后端授权接口（需要带上 Authorization header）
-    // 使用完整的 API URL
+    // 调用后端授权接口（使用 POST 方法）
     const token = authStore.accessToken
     const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || '/api'
+    
     // 构建完整的授权 URL
     let authorizeUrl: string
     if (apiBaseUrl.startsWith('http')) {
@@ -300,17 +300,22 @@ const handleAuthorize = async () => {
     }
     
     const response = await fetch(`${authorizeUrl}?${params.toString()}`, {
-      method: 'GET',
+      method: 'POST',
       headers: {
         'Authorization': `Bearer ${token}`,
         'Content-Type': 'application/json'
       }
     })
 
+    if (!response.ok) {
+      const errorData = await response.json()
+      throw new Error(errorData.msg || '授权失败')
+    }
+
     const result = await response.json()
 
-    // 后端应该返回重定向 URL 或授权码
-    if (result.status === 'ok') {
+    // 后端返回重定向 URL 和授权码
+    if (result.status === 'ok' && result.data) {
       const data = result.data
       
       // 如果有重定向 URL，直接跳转
@@ -324,15 +329,15 @@ const handleAuthorize = async () => {
           redirectUrl.searchParams.set('state', state.value)
         }
         window.location.href = redirectUrl.toString()
+      } else {
+        throw new Error('授权响应格式错误')
       }
     } else {
-      message.error(result.msg || '授权失败')
+      throw new Error(result.msg || '授权失败')
     }
   } catch (err: any) {
     console.error('Authorization failed:', err)
-    const errorMessage = err.message || '授权失败'
-    message.error(errorMessage)
-  } finally {
+    message.error(err.message || '授权失败，请稍后重试')
     authorizing.value = false
   }
 }

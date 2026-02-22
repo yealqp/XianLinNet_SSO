@@ -65,9 +65,9 @@ go mod download
 createdb oauth_server
 
 # Copy configuration file
-copy conf\app.conf.example conf\app.conf
+copy .env.example .env
 
-# Edit conf/app.conf and configure:
+# Edit .env and configure:
 # - PostgreSQL connection string (REQUIRED)
 # - JWT secret (minimum 32 characters)
 # - Admin credentials (REQUIRED for first run)
@@ -105,7 +105,7 @@ pnpm build
 
 ### Configuration
 
-Edit `conf/app.conf` to configure:
+Edit `.env` to configure:
 
 **Required Settings:**
 - Database configuration (PostgreSQL):
@@ -140,7 +140,6 @@ See `docs/postgresql-setup.md` for detailed setup instructions
 
 ```
 .
-├── conf/              # Configuration files
 ├── controllers/       # HTTP request handlers
 ├── models/           # Database models and operations
 ├── services/         # Business logic layer
@@ -169,7 +168,7 @@ See `docs/postgresql-setup.md` for detailed setup instructions
 
 ### Default Admin Account
 
-After running `go run main.go init`, an admin account will be created using the credentials from `conf/app.conf`:
+After running `go run main.go init`, an admin account will be created using the credentials from `.env`:
 
 - Email: As configured in `adminEmail`
 - Password: As configured in `adminPassword`
@@ -257,9 +256,9 @@ go mod download
 createdb oauth_server
 
 # 复制配置文件
-copy conf\app.conf.example conf\app.conf
+copy .env.example .env
 
-# 编辑 conf/app.conf 并配置：
+# 编辑 .env 并配置：
 # - PostgreSQL 连接字符串（必需）
 # - JWT 密钥（至少 32 个字符）
 # - 管理员凭据（首次运行必需）
@@ -297,7 +296,7 @@ pnpm build
 
 ### 配置说明
 
-编辑 `conf/app.conf` 进行配置：
+编辑 `.env` 进行配置：
 
 **必需设置：**
 - 数据库配置（PostgreSQL）：
@@ -332,7 +331,6 @@ dbSSLMode = disable
 
 ```
 .
-├── conf/              # 配置文件
 ├── controllers/       # HTTP 请求处理器
 ├── models/           # 数据库模型和操作
 ├── services/         # 业务逻辑层
@@ -361,7 +359,7 @@ dbSSLMode = disable
 
 ### 默认管理员账户
 
-运行 `go run main.go init` 后，将使用 `conf/app.conf` 中的凭据创建管理员账户：
+运行 `go run main.go init` 后，将使用 `.env` 中的凭据创建管理员账户：
 
 - 邮箱：在 `adminEmail` 中配置
 - 密码：在 `adminPassword` 中配置

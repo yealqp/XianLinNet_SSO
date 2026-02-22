@@ -79,16 +79,6 @@ const routes: RouteRecordRaw[] = [
         path: 'tokens',
         name: 'TokenManagement',
         component: () => import('@/views/admin/TokensView.vue')
-      },
-      {
-        path: 'roles',
-        name: 'RoleManagement',
-        component: () => import('@/views/admin/RolesView.vue')
-      },
-      {
-        path: 'permissions',
-        name: 'PermissionManagement',
-        component: () => import('@/views/admin/PermissionsView.vue')
       }
     ]
   },

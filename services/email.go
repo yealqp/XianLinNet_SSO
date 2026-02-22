@@ -7,12 +7,12 @@ import (
 	"crypto/rand"
 	"crypto/tls"
 	"fmt"
+	"log"
 	"math/big"
 	"net/smtp"
+	"os"
+	"strconv"
 	"time"
-
-	"github.com/beego/beego/v2/core/logs"
-	"github.com/beego/beego/v2/server/web"
 )
 
 // EmailVerificationCode stores verification code information
@@ -46,19 +46,19 @@ func GenerateVerificationCode() string {
 
 // SendEmailViaSMTP sends email using SMTP with SSL/TLS support
 func SendEmailViaSMTP(to, subject, body string) error {
-	smtpEnabled, _ := web.AppConfig.Bool("smtpEnabled")
+	smtpEnabled, _ := strconv.ParseBool(os.Getenv("SMTP_ENABLED"))
 	if !smtpEnabled {
-		logs.Info("SMTP disabled. Email to %s", to)
+		log.Printf("SMTP disabled. Email to %s", to)
 		return nil
 	}
 
-	smtpHost, _ := web.AppConfig.String("smtpHost")
-	smtpPort, _ := web.AppConfig.String("smtpPort")
-	smtpUseSSL, _ := web.AppConfig.Bool("smtpUseSSL")
-	smtpUser, _ := web.AppConfig.String("smtpUser")
-	smtpPassword, _ := web.AppConfig.String("smtpPassword")
-	smtpFrom, _ := web.AppConfig.String("smtpFrom")
-	smtpFromName, _ := web.AppConfig.String("smtpFromName")
+	smtpHost := os.Getenv("SMTP_HOST")
+	smtpPort := os.Getenv("SMTP_PORT")
+	smtpUseSSL, _ := strconv.ParseBool(os.Getenv("SMTP_USE_SSL"))
+	smtpUser := os.Getenv("SMTP_USER")
+	smtpPassword := os.Getenv("SMTP_PASSWORD")
+	smtpFrom := os.Getenv("SMTP_FROM")
+	smtpFromName := os.Getenv("SMTP_FROM_NAME")
 
 	if smtpHost == "" || smtpPort == "" || smtpUser == "" || smtpPassword == "" {
 		return fmt.Errorf("SMTP configuration incomplete")
@@ -88,20 +88,20 @@ func SendEmailViaSMTP(to, subject, body string) error {
 
 		conn, err := tls.Dial("tcp", addr, tlsConfig)
 		if err != nil {
-			logs.Error("Failed to connect with SSL: %v", err)
+			log.Printf("Failed to connect with SSL: %v", err)
 			return err
 		}
 		defer conn.Close()
 
 		client, err := smtp.NewClient(conn, smtpHost)
 		if err != nil {
-			logs.Error("Failed to create SMTP client: %v", err)
+			log.Printf("Failed to create SMTP client: %v", err)
 			return err
 		}
 		defer client.Close()
 
 		if err = client.Auth(auth); err != nil {
-			logs.Error("Failed to authenticate: %v", err)
+			log.Printf("Failed to authenticate: %v", err)
 			return err
 		}
 
@@ -133,12 +133,12 @@ func SendEmailViaSMTP(to, subject, body string) error {
 		// Use STARTTLS (port 587)
 		err := smtp.SendMail(addr, auth, smtpFrom, []string{to}, msg)
 		if err != nil {
-			logs.Error("Failed to send email: %v", err)
+			log.Printf("Failed to send email: %v", err)
 			return err
 		}
 	}
 
-	logs.Info("Email sent successfully to %s", to)
+	log.Printf("Email sent successfully to %s", to)
 	return nil
 }
 
@@ -172,15 +172,15 @@ func SendVerificationEmail(email, purpose string) (string, error) {
 	// Send email
 	err := SendEmailViaSMTP(email, subject, body)
 	if err != nil {
-		logs.Error("Failed to send verification email: %v", err)
+		log.Printf("Failed to send verification email: %v", err)
 		// In development, still log the code
-		logs.Info("Verification code for %s (%s): %s", email, purpose, code)
+		log.Printf("Verification code for %s (%s): %s", email, purpose, code)
 	}
 
 	// In development, return the code for testing
-	smtpEnabled, _ := web.AppConfig.Bool("smtpEnabled")
+	smtpEnabled, _ := strconv.ParseBool(os.Getenv("SMTP_ENABLED"))
 	if !smtpEnabled {
-		logs.Info("Verification code for %s (%s): %s", email, purpose, code)
+		log.Printf("Verification code for %s (%s): %s", email, purpose, code)
 		return code, nil
 	}
 

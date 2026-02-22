@@ -1,89 +1,204 @@
 <template>
   <div class="profile-view">
-    <h2 class="page-title">个人资料</h2>
-    
-    <a-row :gutter="16">
-      <a-col :xs="24" :md="8">
-        <a-card title="头像预览">
-          <div class="avatar-preview">
-            <a-avatar :size="120" :src="avatarUrl">
-              <template #icon><UserOutlined /></template>
-            </a-avatar>
-            <p class="avatar-hint">{{ avatarSource }}</p>
+    <!-- 页面标题 -->
+    <div class="page-header">
+      <h1 class="page-title">
+        <UserOutlined class="title-icon" />
+        个人资料
+      </h1>
+      <p class="page-subtitle">管理你的个人信息和偏好设置</p>
+    </div>
+
+    <a-row :gutter="[24, 24]">
+      <!-- 左侧：头像和基本信息 -->
+      <a-col :xs="24" :lg="8">
+        <!-- 头像卡片 -->
+        <a-card class="avatar-card" :bordered="false">
+          <div class="avatar-section">
+            <div class="avatar-wrapper">
+              <a-avatar :size="140" :src="avatarUrl" class="main-avatar">
+                <template #icon><UserOutlined /></template>
+              </a-avatar>
+              <div class="avatar-badge">
+                <CheckCircleFilled v-if="userInfo?.isRealName" class="verified-icon" />
+              </div>
+            </div>
+            <h3 class="user-name">{{ formState.username || '未设置' }}</h3>
+            <p class="user-email">{{ formState.email }}</p>
+            <div class="avatar-source">
+              <PictureOutlined />
+              {{ avatarSource }}
+            </div>
+          </div>
+        </a-card>
+
+        <!-- 账户状态卡片 -->
+        <a-card class="status-card" :bordered="false">
+          <template #title>
+            <div class="card-title">
+              <SafetyOutlined class="title-icon" />
+              账户状态
+            </div>
+          </template>
+          <div class="status-items">
+            <div class="status-item">
+              <div class="status-label">用户 ID</div>
+              <div class="status-value">
+                <a-tag color="blue">{{ userInfo?.id }}</a-tag>
+              </div>
+            </div>
+            <div class="status-item">
+              <div class="status-label">账户状态</div>
+              <div class="status-value">
+                <a-badge status="success" text="正常" />
+              </div>
+            </div>
+            <div class="status-item">
+              <div class="status-label">实名认证</div>
+              <div class="status-value">
+                <a-tag :color="userInfo?.isRealName ? 'success' : 'default'">
+                  {{ userInfo?.isRealName ? '已认证' : '未认证' }}
+                </a-tag>
+              </div>
+            </div>
+            <div class="status-item">
+              <div class="status-label">管理员权限</div>
+              <div class="status-value">
+                <a-tag :color="userInfo?.isAdmin ? 'red' : 'default'">
+                  {{ userInfo?.isAdmin ? '是' : '否' }}
+                </a-tag>
+              </div>
+            </div>
           </div>
         </a-card>
       </a-col>
 
-      <a-col :xs="24" :md="16">
-        <a-card title="基本信息">
+      <!-- 右侧：编辑表单 -->
+      <a-col :xs="24" :lg="16">
+        <a-card class="form-card" :bordered="false">
+          <template #title>
+            <div class="card-title">
+              <EditOutlined class="title-icon" />
+              编辑资料
+            </div>
+          </template>
+
           <a-form
             :model="formState"
             name="profile"
             @finish="handleUpdate"
             layout="vertical"
+            class="profile-form"
           >
-            <a-form-item label="用户名">
+            <!-- 用户名 -->
+            <a-form-item label="用户名" class="form-item">
               <a-input
                 v-model:value="formState.username"
-                placeholder="用户名"
+                placeholder="请输入用户名"
                 size="large"
+                class="form-input"
               >
                 <template #prefix>
-                  <UserOutlined />
+                  <UserOutlined class="input-icon" />
                 </template>
               </a-input>
+              <template #extra>
+                <span class="form-hint">用户名将显示在你的个人资料中</span>
+              </template>
             </a-form-item>
 
-            <a-form-item label="邮箱">
+            <!-- 邮箱 -->
+            <a-form-item label="邮箱地址" class="form-item">
               <a-input
                 v-model:value="formState.email"
-                placeholder="邮箱"
+                placeholder="邮箱地址"
                 size="large"
                 disabled
+                class="form-input"
               >
                 <template #prefix>
-                  <MailOutlined />
+                  <MailOutlined class="input-icon" />
                 </template>
               </a-input>
+              <template #extra>
+                <span class="form-hint">邮箱地址不可修改，用于登录和接收通知</span>
+              </template>
             </a-form-item>
 
-            <a-form-item label="QQ 号">
+            <!-- QQ 号 -->
+            <a-form-item label="QQ 号码" class="form-item">
               <a-input
                 v-model:value="formState.qq"
                 placeholder="输入 QQ 号可自动使用 QQ 头像"
                 size="large"
+                class="form-input"
                 @change="updateAvatarPreview"
               >
                 <template #prefix>
-                  <MessageOutlined />
+                  <MessageOutlined class="input-icon" />
+                </template>
+                <template #suffix>
+                  <a-tooltip title="输入 QQ 号后将自动使用 QQ 头像">
+                    <QuestionCircleOutlined class="help-icon" />
+                  </a-tooltip>
                 </template>
               </a-input>
+              <template #extra>
+                <span class="form-hint">绑定 QQ 号后可自动获取 QQ 头像</span>
+              </template>
             </a-form-item>
 
-            <a-form-item label="自定义头像 URL（优先使用）">
+            <!-- 自定义头像 -->
+            <a-form-item label="自定义头像" class="form-item">
               <a-input
                 v-model:value="formState.avatar"
-                placeholder="头像 URL，留空则使用 QQ 头像"
+                placeholder="输入头像 URL，留空则使用 QQ 头像"
                 size="large"
+                class="form-input"
                 @change="updateAvatarPreview"
               >
                 <template #prefix>
-                  <LinkOutlined />
+                  <LinkOutlined class="input-icon" />
+                </template>
+                <template #suffix>
+                  <a-tooltip title="自定义头像优先级高于 QQ 头像">
+                    <QuestionCircleOutlined class="help-icon" />
+                  </a-tooltip>
                 </template>
               </a-input>
+              <template #extra>
+                <span class="form-hint">自定义头像 URL，优先级高于 QQ 头像</span>
+              </template>
             </a-form-item>
 
-            <a-form-item>
-              <a-space>
+            <!-- 头像预览 -->
+            <a-form-item label="头像预览" class="form-item">
+              <div class="avatar-preview-box">
+                <a-avatar :size="80" :src="avatarUrl" class="preview-avatar">
+                  <template #icon><UserOutlined /></template>
+                </a-avatar>
+                <div class="preview-info">
+                  <div class="preview-label">当前头像</div>
+                  <div class="preview-source">{{ avatarSource }}</div>
+                </div>
+              </div>
+            </a-form-item>
+
+            <!-- 操作按钮 -->
+            <a-form-item class="form-actions">
+              <a-space :size="12">
                 <a-button
                   type="primary"
                   html-type="submit"
                   size="large"
                   :loading="loading"
+                  class="submit-btn"
                 >
+                  <SaveOutlined />
                   保存修改
                 </a-button>
-                <a-button size="large" @click="loadData">
+                <a-button size="large" @click="loadData" class="reset-btn">
+                  <ReloadOutlined />
                   重置
                 </a-button>
               </a-space>
@@ -92,22 +207,6 @@
         </a-card>
       </a-col>
     </a-row>
-
-    <a-card title="账户信息" class="mt-4">
-      <a-descriptions bordered :column="{ xs: 1, sm: 2 }">
-        <a-descriptions-item label="用户 ID">
-          {{ userInfo?.id }}
-        </a-descriptions-item>
-        <a-descriptions-item label="账户状态">
-          <a-badge status="success" text="正常" />
-        </a-descriptions-item>
-        <a-descriptions-item label="管理员权限">
-          <a-tag :color="userInfo?.isAdmin ? 'red' : 'default'">
-            {{ userInfo?.isAdmin ? '是' : '否' }}
-          </a-tag>
-        </a-descriptions-item>
-      </a-descriptions>
-    </a-card>
   </div>
 </template>
 
@@ -120,7 +219,14 @@ import {
   UserOutlined,
   MailOutlined,
   MessageOutlined,
-  LinkOutlined
+  LinkOutlined,
+  EditOutlined,
+  SafetyOutlined,
+  SaveOutlined,
+  ReloadOutlined,
+  PictureOutlined,
+  QuestionCircleOutlined,
+  CheckCircleFilled
 } from '@ant-design/icons-vue'
 import { message } from 'ant-design-vue'
 
@@ -168,13 +274,41 @@ const updateAvatarPreview = () => {
   // 触发响应式更新
 }
 
-const loadData = () => {
-  const user = authStore.userInfo
-  if (user) {
-    formState.username = user.username || ''
-    formState.email = user.email || ''
-    formState.qq = (user as any).qq || ''
-    formState.avatar = (user as any).avatar || ''
+const loadData = async () => {
+  try {
+    // Fetch fresh user data from API
+    const response = await authApi.getUserInfo()
+    if (response.status === 'ok' && response.data) {
+      const user = response.data
+      // 映射后端字段到前端字段
+      formState.username = user.username || user.name || user.preferred_username || ''
+      formState.email = user.email || ''
+      formState.qq = user.qq || ''
+      formState.avatar = user.avatar || user.picture || ''
+      
+      // 更新 store，使用标准化的字段
+      const normalizedUser = {
+        id: String(user.id || user.sub || ''),
+        username: user.username || user.name || user.preferred_username || '',
+        email: user.email || '',
+        qq: user.qq || '',
+        avatar: user.avatar || user.picture || '',
+        isAdmin: user.is_admin || false,
+        isRealName: user.is_real_name || false
+      }
+      authStore.userInfo = normalizedUser as any
+      storage.setUserInfo(normalizedUser)
+    }
+  } catch (error) {
+    console.error('Failed to load user info:', error)
+    // Fallback to store data if API fails
+    const user = authStore.userInfo
+    if (user) {
+      formState.username = user.username || ''
+      formState.email = user.email || ''
+      formState.qq = (user as any).qq || ''
+      formState.avatar = (user as any).avatar || ''
+    }
   }
 }
 
@@ -235,61 +369,298 @@ onMounted(() => {
   padding: 0;
 }
 
+/* 页面标题 */
+.page-header {
+  margin-bottom: 32px;
+}
+
 .page-title {
-  font-size: 24px;
-  font-weight: 600;
+  font-size: 28px;
+  font-weight: 700;
+  color: #1f1f1f;
+  margin: 0 0 8px 0;
+  display: flex;
+  align-items: center;
+}
+
+.page-title .title-icon {
+  margin-right: 12px;
+  color: #667eea;
+}
+
+.page-subtitle {
+  font-size: 15px;
+  color: #8c8c8c;
+  margin: 0;
+}
+
+/* 卡片通用样式 */
+.avatar-card,
+.status-card,
+.form-card {
+  border-radius: 16px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
   margin-bottom: 24px;
+  overflow: hidden;
+}
+
+.card-title {
+  display: flex;
+  align-items: center;
+  font-size: 16px;
+  font-weight: 600;
   color: #1f1f1f;
 }
 
-.avatar-preview {
+.card-title .title-icon {
+  margin-right: 8px;
+  color: #667eea;
+}
+
+/* 头像卡片 */
+.avatar-section {
+  text-align: center;
+  padding: 24px 0;
+}
+
+.avatar-wrapper {
+  position: relative;
+  display: inline-block;
+  margin-bottom: 20px;
+}
+
+.main-avatar {
+  border: 4px solid #f0f0f0;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+}
+
+.avatar-badge {
+  position: absolute;
+  bottom: 8px;
+  right: 8px;
+  width: 32px;
+  height: 32px;
+  background: #ffffff;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.verified-icon {
+  font-size: 20px;
+  color: #52c41a;
+}
+
+.user-name {
+  font-size: 22px;
+  font-weight: 600;
+  color: #1f1f1f;
+  margin: 0 0 8px 0;
+}
+
+.user-email {
+  font-size: 14px;
+  color: #8c8c8c;
+  margin: 0 0 16px 0;
+}
+
+.avatar-source {
+  display: inline-flex;
+  align-items: center;
+  padding: 6px 16px;
+  background: #f0f0f0;
+  border-radius: 20px;
+  font-size: 13px;
+  color: #595959;
+  gap: 6px;
+}
+
+/* 状态卡片 */
+.status-items {
   display: flex;
   flex-direction: column;
+  gap: 16px;
+}
+
+.status-item {
+  display: flex;
+  justify-content: space-between;
   align-items: center;
-  padding: 20px 0;
+  padding: 12px 0;
+  border-bottom: 1px solid #f0f0f0;
 }
 
-.avatar-hint {
-  margin-top: 16px;
-  color: #8c8c8c;
+.status-item:last-child {
+  border-bottom: none;
+}
+
+.status-label {
   font-size: 14px;
-}
-
-.mt-4 {
-  margin-top: 24px;
-}
-
-:deep(.ant-form-item-label > label) {
   color: #595959;
+  font-weight: 500;
+}
+
+.status-value {
   font-size: 14px;
+  color: #1f1f1f;
 }
 
-:deep(.ant-input-affix-wrapper) {
-  background: #ffffff;
-  border: 1px solid #d9d9d9;
-  border-radius: 6px;
+/* 表单卡片 */
+.profile-form {
+  max-width: 600px;
 }
 
-:deep(.ant-input-affix-wrapper:hover) {
-  border-color: #ff4db3;
+.form-item {
+  margin-bottom: 28px;
 }
 
-:deep(.ant-input-affix-wrapper:focus),
-:deep(.ant-input-affix-wrapper-focused) {
-  border-color: #f6339a;
-  box-shadow: 0 0 0 2px rgba(246, 51, 154, 0.1);
+.form-input {
+  border-radius: 8px;
+  transition: all 0.3s ease;
 }
 
-:deep(.ant-btn-primary) {
-  background: #f6339a;
+.form-input:hover {
+  border-color: #667eea;
+}
+
+.form-input:focus,
+.form-input:focus-within {
+  border-color: #667eea;
+  box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.1);
+}
+
+.input-icon {
+  color: #8c8c8c;
+}
+
+.help-icon {
+  color: #bfbfbf;
+  cursor: help;
+}
+
+.form-hint {
+  font-size: 13px;
+  color: #8c8c8c;
+}
+
+/* 头像预览框 */
+.avatar-preview-box {
+  display: flex;
+  align-items: center;
+  padding: 20px;
+  background: linear-gradient(135deg, #667eea15 0%, #764ba215 100%);
+  border-radius: 12px;
+  gap: 20px;
+}
+
+.preview-avatar {
+  border: 3px solid #ffffff;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.preview-info {
+  flex: 1;
+}
+
+.preview-label {
+  font-size: 14px;
+  font-weight: 600;
+  color: #1f1f1f;
+  margin-bottom: 4px;
+}
+
+.preview-source {
+  font-size: 13px;
+  color: #667eea;
+}
+
+/* 操作按钮 */
+.form-actions {
+  margin-top: 32px;
+  padding-top: 24px;
+  border-top: 1px solid #f0f0f0;
+}
+
+.submit-btn {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   border: none;
+  font-weight: 500;
+  height: 44px;
+  padding: 0 32px;
 }
 
-:deep(.ant-btn-primary:hover) {
-  background: #ff4db3;
+.submit-btn:hover {
+  background: linear-gradient(135deg, #5568d3 0%, #6a3f8f 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
 }
 
-:deep(.ant-btn-primary:active) {
-  background: #e02987;
+.reset-btn {
+  height: 44px;
+  padding: 0 24px;
+  border-radius: 8px;
+}
+
+/* 深度样式覆盖 */
+:deep(.ant-form-item-label > label) {
+  font-size: 14px;
+  font-weight: 600;
+  color: #1f1f1f;
+}
+
+:deep(.ant-input-disabled) {
+  background: #fafafa;
+  color: #8c8c8c;
+}
+
+/* 响应式 */
+@media (max-width: 992px) {
+  .page-title {
+    font-size: 24px;
+  }
+
+  .avatar-section {
+    padding: 20px 0;
+  }
+
+  .main-avatar {
+    width: 100px !important;
+    height: 100px !important;
+  }
+
+  .user-name {
+    font-size: 20px;
+  }
+}
+
+@media (max-width: 576px) {
+  .page-header {
+    margin-bottom: 24px;
+  }
+
+  .page-title {
+    font-size: 22px;
+  }
+
+  .avatar-preview-box {
+    flex-direction: column;
+    text-align: center;
+  }
+
+  .submit-btn,
+  .reset-btn {
+    width: 100%;
+  }
+
+  .form-actions :deep(.ant-space) {
+    width: 100%;
+    flex-direction: column;
+  }
+
+  .form-actions :deep(.ant-space-item) {
+    width: 100%;
+  }
 }
 </style>

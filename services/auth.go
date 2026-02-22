@@ -83,13 +83,6 @@ func RegisterUser(email, password, username string) (*models.User, error) {
 		return nil, err
 	}
 
-	// Assign default role: unverified-user
-	_, err = models.AddUserRole(user.Id, "admin", "unverified-user")
-	if err != nil {
-		// Log error but don't fail registration
-		fmt.Printf("Warning: Failed to assign default role to user: %v\n", err)
-	}
-
 	return user, nil
 }
 

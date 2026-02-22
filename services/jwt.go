@@ -5,10 +5,10 @@ package services
 
 import (
 	"fmt"
+	"os"
 	"strconv"
 	"time"
 
-	"github.com/beego/beego/v2/server/web"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/oauth-server/oauth-server/models"
 )
@@ -49,13 +49,13 @@ func GenerateIDToken(application *models.Application, user *models.User, nonce s
 	expireTime := nowTime.Add(time.Duration(application.ExpireInHours) * time.Hour)
 
 	// Get JWT secret from config
-	jwtSecret, _ := web.AppConfig.String("jwtSecret")
+	jwtSecret := os.Getenv("JWT_SECRET")
 	if jwtSecret == "" {
 		jwtSecret = "default-secret-key-change-in-production"
 	}
 
 	// Get origin from config
-	origin, _ := web.AppConfig.String("origin")
+	origin := os.Getenv("ORIGIN")
 	if origin == "" {
 		origin = "http://localhost:8080"
 	}
@@ -110,13 +110,13 @@ func GenerateJwtToken(application *models.Application, user *models.User, scope,
 	refreshExpireTime := nowTime.Add(time.Duration(application.RefreshExpireInHours) * time.Hour)
 
 	// Get JWT secret from config
-	jwtSecret, _ := web.AppConfig.String("jwtSecret")
+	jwtSecret := os.Getenv("JWT_SECRET")
 	if jwtSecret == "" {
 		jwtSecret = "default-secret-key-change-in-production"
 	}
 
 	// Get origin from config
-	origin, _ := web.AppConfig.String("origin")
+	origin := os.Getenv("ORIGIN")
 	if origin == "" {
 		origin = "http://localhost:8080"
 	}
@@ -215,7 +215,7 @@ func GenerateJwtToken(application *models.Application, user *models.User, scope,
 
 // ParseJwtToken parses and validates a JWT token
 func ParseJwtToken(tokenString string) (*Claims, error) {
-	jwtSecret, _ := web.AppConfig.String("jwtSecret")
+	jwtSecret := os.Getenv("JWT_SECRET")
 	if jwtSecret == "" {
 		jwtSecret = "default-secret-key-change-in-production"
 	}

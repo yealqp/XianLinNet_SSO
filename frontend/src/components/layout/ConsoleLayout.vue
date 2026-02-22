@@ -48,14 +48,6 @@
             <KeyOutlined />
             <span>令牌管理</span>
           </a-menu-item>
-          <a-menu-item key="roles" @click="$router.push('/admin/roles')">
-            <SafetyOutlined />
-            <span>角色管理</span>
-          </a-menu-item>
-          <a-menu-item key="permissions" @click="$router.push('/admin/permissions')">
-            <LockOutlined />
-            <span>权限管理</span>
-          </a-menu-item>
         </a-sub-menu>
       </a-menu>
     </a-layout-sider>
@@ -115,8 +107,6 @@ import {
   TeamOutlined,
   AppstoreOutlined,
   KeyOutlined,
-  SafetyOutlined,
-  LockOutlined,
   IdcardOutlined,
   MenuUnfoldOutlined,
   MenuFoldOutlined,

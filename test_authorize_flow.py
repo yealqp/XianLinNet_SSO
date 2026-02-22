@@ -12,8 +12,8 @@ import threading
 
 # 配置
 BASE_URL = "http://localhost:8080"  # 后端服务器地址
-CLIENT_ID = "d0ad0afc-2123-48ad-bc08-dc06a95a6ed9"  # 从管理后台获取
-CLIENT_SECRET = "vwyZGBZqo1e6vU0BHeikEk7-yY3TU6QyKnyGktnhhfs="  # 从管理后台获取
+CLIENT_ID = "7ff07d9e-b6f2-4b3d-865a-3a285cbfa739"  # 从管理后台获取
+CLIENT_SECRET = "oA7njB8YDI1ssIM8qCY6_IqhjFeCxOuurEZYnD6PPLw="  # 从管理后台获取
 REDIRECT_URI = "http://localhost:8888/callback"  # 回调地址
 SCOPE = "openid profile email"
 
@@ -130,7 +130,7 @@ def test_authorization_flow():
         print("✗ 授权失败或被取消")
         return
     
-    print(f"✓ 收到授权码: {authorization_code[:20]}...")
+    print(f"✓ 收到授权码: {authorization_code}")
     
     # 步骤 4: 使用授权码交换 access token
     print("\n[4] 使用授权码交换 access token...")

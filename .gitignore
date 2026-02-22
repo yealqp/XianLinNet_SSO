@@ -11,7 +11,7 @@ oauth-server
 .kiro
 # Output of the go coverage tool
 *.out
-
+.shared
 # Dependency directories
 vendor/
 
@@ -22,9 +22,6 @@ go.work
 
 # Docker volumes (data is in named volumes)
 .docker/
-
-# Configuration files (keep .example files)
-conf/app.conf
 
 # IDE
 .idea/

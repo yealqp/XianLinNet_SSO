@@ -112,10 +112,8 @@ func HandleUserInfo() fiber.Handler {
 		// 检查 scope 并添加相应的声明
 		scopes := claims.Scope
 
-		// Profile scope - 包含用户名、头像等
+		// Profile scope - 包含头像
 		if containsScope(scopes, "profile") || containsScope(scopes, "openid") {
-			userInfo["name"] = user.Username
-			userInfo["preferred_username"] = user.Username
 			if user.Avatar != "" {
 				userInfo["picture"] = user.Avatar
 			}
@@ -124,18 +122,22 @@ func HandleUserInfo() fiber.Handler {
 		// Email scope - 包含邮箱信息
 		if containsScope(scopes, "email") || containsScope(scopes, "openid") {
 			userInfo["email"] = user.Email
-			userInfo["email_verified"] = true
 		}
 
 		// 添加自定义声明（始终包含）
+		userInfo["id"] = user.Id
 		userInfo["username"] = user.Username
 		if user.QQ != "" {
 			userInfo["qq"] = user.QQ
 		}
+		if user.Avatar != "" {
+			userInfo["avatar"] = user.Avatar
+		}
 		userInfo["is_real_name"] = user.IsRealName
 		userInfo["is_admin"] = user.IsAdmin
 
-		return ctx.JSON(userInfo)
+		// 返回标准的 ApiResponse 格式
+		return ctx.JSON(types.SuccessResponse(userInfo))
 	}
 }
 

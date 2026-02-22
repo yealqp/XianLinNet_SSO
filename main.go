@@ -19,7 +19,12 @@ import (
 	"github.com/oauth-server/oauth-server/types"
 )
 
+var serverStartTime = time.Now()
+
 func main() {
+	// 记录服务器启动时间到 services 包
+	services.ServerStartTime = serverStartTime
+
 	// 步骤 0: 加载 .env 文件
 	if err := godotenv.Load(); err != nil {
 		log.Printf("Warning: .env file not found, using system environment variables")

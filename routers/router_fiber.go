@@ -11,10 +11,13 @@ import (
 )
 
 // RegisterMiddlewares 注册全局中间件
-// 按照执行顺序注册：CORS -> Logger -> Recovery
+// 按照执行顺序注册：CORS -> Compress -> Logger -> Recovery
 func RegisterMiddlewares(app *fiber.App) {
 	// CORS 中间件 - 处理跨域请求
 	app.Use(middlewares.CORSMiddleware())
+
+	// Compress 中间件 - 响应压缩（对大于 1KB 的响应启用 gzip）
+	app.Use(middlewares.CompressMiddleware())
 
 	// Logger 中间件 - 记录所有请求
 	app.Use(middlewares.LoggerMiddleware())
@@ -49,11 +52,6 @@ func RegisterRoutes(app *fiber.App) {
 	api.Post("/auth/reset-password", handlers.HandleResetPassword())
 	api.Get("/auth/application-info", handlers.HandleGetApplicationInfo())
 
-	// ========== 需要认证的路由 ==========
-	authenticated := api.Group("", middlewares.JWTAuthMiddleware())
-	authenticated.Post("/auth/update-profile", handlers.HandleUpdateProfile())
-	authenticated.Get("/userinfo", handlers.HandleUserInfo())
-
 	// ========== Token 路由（公开） ==========
 	api.Post("/oauth/token", handlers.HandleToken())
 	api.Post("/login/oauth/access_token", handlers.HandleToken()) // 兼容别名
@@ -61,6 +59,10 @@ func RegisterRoutes(app *fiber.App) {
 	api.Post("/login/oauth/introspect", handlers.HandleIntrospect()) // 兼容别名
 	api.Post("/oauth/revoke", handlers.HandleRevoke())
 	api.Post("/oauth/register", handlers.HandleOidcRegister())
+
+	// ========== 需要认证的路由 ==========
+	api.Post("/auth/update-profile", middlewares.JWTAuthMiddleware(), handlers.HandleUpdateProfile())
+	api.Get("/userinfo", middlewares.JWTAuthMiddleware(), handlers.HandleUserInfo())
 
 	// ========== 管理员路由（需要 JWT 认证 + 管理员权限） ==========
 	admin := api.Group("/admin", middlewares.JWTAuthMiddleware(), middlewares.AdminAuthMiddleware())
@@ -91,8 +93,8 @@ func RegisterRoutes(app *fiber.App) {
 
 	// ========== 实名认证路由 ==========
 	// 提交实名认证（需要 JWT 认证）
-	authenticated.Post("/realname/submit", handlers.HandleSubmitRealName())
-	authenticated.Get("/realname/verify", handlers.HandleGetRealNameInfo())
+	api.Post("/realname/submit", middlewares.JWTAuthMiddleware(), handlers.HandleSubmitRealName())
+	api.Get("/realname/verify", middlewares.JWTAuthMiddleware(), handlers.HandleGetRealNameInfo())
 
 	// 管理员验证实名信息（需要管理员权限）
 	admin.Post("/realname/verify", handlers.HandleVerifyRealName())
