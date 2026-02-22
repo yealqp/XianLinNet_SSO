@@ -185,6 +185,7 @@ const handleLogout = async () => {
   z-index: 100;
   background: #ffffff !important;
   box-shadow: 2px 0 8px rgba(0, 0, 0, 0.05);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 /* 覆盖 Ant Design 侧栏暗色主题 */
@@ -199,11 +200,27 @@ const handleLogout = async () => {
 .console-sider :deep(.ant-menu-dark .ant-menu-item) {
   color: #666666;
   background: transparent;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+}
+
+.console-sider :deep(.ant-menu-dark .ant-menu-item::before) {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  background: #ec4899;
+  transform: scaleY(0);
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .console-sider :deep(.ant-menu-dark .ant-menu-item:hover) {
   color: #ec4899;
   background: #fdf2f8;
+  transform: translateX(4px);
 }
 
 .console-sider :deep(.ant-menu-dark .ant-menu-item-selected) {
@@ -211,6 +228,11 @@ const handleLogout = async () => {
   background: linear-gradient(90deg, #fdf2f8 0%, #fce7f3 100%);
   border-right: 3px solid #ec4899;
   font-weight: 600;
+  transform: translateX(0);
+}
+
+.console-sider :deep(.ant-menu-dark .ant-menu-item-selected::before) {
+  transform: scaleY(1);
 }
 
 .console-sider :deep(.ant-menu-dark .ant-menu-submenu-title) {
@@ -249,6 +271,13 @@ const handleLogout = async () => {
   background: linear-gradient(135deg, #fdf2f8 0%, #fce7f3 100%);
   white-space: nowrap;
   border-bottom: 1px solid #fbcfe8;
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+.logo:hover {
+  background: linear-gradient(135deg, #fce7f3 0%, #fbcfe8 100%);
+  letter-spacing: 1px;
 }
 
 .console-header {
@@ -263,6 +292,7 @@ const handleLogout = async () => {
   top: 0;
   margin-left: 200px;
   border-bottom: 1px solid #f3f4f6;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .console-header.collapsed {
@@ -277,12 +307,20 @@ const handleLogout = async () => {
 .trigger {
   font-size: 18px;
   cursor: pointer;
-  transition: color 0.3s;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   color: #666666;
+  padding: 8px;
+  border-radius: 8px;
 }
 
 .trigger:hover {
   color: #ec4899;
+  background: #fdf2f8;
+  transform: scale(1.1);
+}
+
+.trigger:active {
+  transform: scale(0.95);
 }
 
 .header-right {
@@ -296,11 +334,17 @@ const handleLogout = async () => {
   cursor: pointer;
   padding: 8px 12px;
   border-radius: 8px;
-  transition: all 0.2s ease;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .user-info:hover {
   background: #fdf2f8;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(236, 72, 153, 0.1);
+}
+
+.user-info:active {
+  transform: translateY(0);
 }
 
 .username {
@@ -317,6 +361,19 @@ const handleLogout = async () => {
   background: #ffffff;
   min-height: calc(100vh - 112px);
   border-radius: 8px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  animation: fadeIn 0.4s ease-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .console-content.collapsed {

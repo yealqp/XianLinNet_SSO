@@ -267,10 +267,34 @@ onMounted(() => {
 <style scoped>
 .authorizations-view {
   padding: 0;
+  animation: fadeIn 0.4s ease-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .page-header {
   margin-bottom: 32px;
+  animation: slideDown 0.5s ease-out;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .page-title {
@@ -285,6 +309,16 @@ onMounted(() => {
 .page-title .title-icon {
   margin-right: 12px;
   color: #ec4899;
+  animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
 }
 
 .page-subtitle {
@@ -298,18 +332,34 @@ onMounted(() => {
   border-radius: 20px;
   padding: 24px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  transition: box-shadow 0.3s ease;
+}
+
+.auth-tabs:hover {
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
 }
 
 /* 空状态 */
 .empty-state {
   text-align: center;
   padding: 80px 20px;
+  animation: fadeIn 0.6s ease-out;
 }
 
 .empty-icon {
   font-size: 64px;
   color: #d1d5db;
   margin-bottom: 16px;
+  animation: float 3s ease-in-out infinite;
+}
+
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
 }
 
 .empty-text {
@@ -317,12 +367,14 @@ onMounted(() => {
   font-weight: 600;
   color: #6b7280;
   margin: 0 0 8px 0;
+  animation: fadeIn 0.8s ease-out;
 }
 
 .empty-hint {
   font-size: 14px;
   color: #9ca3af;
   margin: 0;
+  animation: fadeIn 1s ease-out;
 }
 
 /* 应用网格 */
@@ -335,12 +387,31 @@ onMounted(() => {
 .app-card {
   border-radius: 16px;
   border: 1px solid #e5e7eb;
-  transition: all 0.3s ease;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  animation: slideUp 0.5s ease-out backwards;
+  animation-delay: calc(var(--index, 0) * 0.1s);
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .app-card:hover {
-  box-shadow: 0 8px 24px rgba(236, 72, 153, 0.08);
+  box-shadow: 0 12px 32px rgba(236, 72, 153, 0.12);
   border-color: #f472b6;
+  transform: translateY(-4px);
+}
+
+.app-card:active {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(236, 72, 153, 0.1);
 }
 
 .app-header {
@@ -352,6 +423,13 @@ onMounted(() => {
 .app-logo {
   flex-shrink: 0;
   border: 2px solid #fce7f3;
+  transition: all 0.3s ease;
+}
+
+.app-card:hover .app-logo {
+  transform: scale(1.05);
+  border-color: #f9a8d4;
+  box-shadow: 0 4px 12px rgba(236, 72, 153, 0.2);
 }
 
 .app-info {
@@ -388,6 +466,11 @@ onMounted(() => {
   padding: 16px;
   background: #f8fafc;
   border-radius: 12px;
+  transition: all 0.3s ease;
+}
+
+.app-card:hover .app-meta {
+  background: #fdf2f8;
 }
 
 .meta-item {
@@ -424,6 +507,14 @@ onMounted(() => {
   justify-content: flex-end;
   padding-top: 12px;
   border-top: 1px solid #e5e7eb;
+}
+
+.app-actions :deep(.ant-btn-link) {
+  transition: all 0.3s ease;
+}
+
+.app-actions :deep(.ant-btn-link:hover) {
+  transform: translateX(4px);
 }
 
 /* 令牌表格 */

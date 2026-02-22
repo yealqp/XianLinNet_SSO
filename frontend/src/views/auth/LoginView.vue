@@ -145,6 +145,18 @@ const handleLogin = async () => {
 <style scoped>
 .login-view {
   width: 100%;
+  animation: fadeInUp 0.6s ease-out;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .title {
@@ -154,6 +166,18 @@ const handleLogin = async () => {
   margin-bottom: 24px;
   color: #ffffff;
   text-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  animation: slideDown 0.8s ease-out;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .extra-links {
@@ -166,13 +190,31 @@ const handleLogin = async () => {
   color: #ffd6ed;
   text-decoration: none;
   font-size: 13px;
-  transition: all 0.3s;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+  position: relative;
+  padding-bottom: 2px;
+}
+
+.extra-links a::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 0;
+  height: 2px;
+  background: #ffffff;
+  transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .extra-links a:hover {
   color: #ffffff;
   text-shadow: 0 2px 6px rgba(246, 51, 154, 0.6);
+  transform: translateY(-2px);
+}
+
+.extra-links a:hover::after {
+  width: 100%;
 }
 
 :deep(.ant-form-item-label > label) {
@@ -186,13 +228,14 @@ const handleLogin = async () => {
   border: 1px solid rgba(255, 255, 255, 0.2);
   border-radius: 8px;
   padding: 10px 14px;
-  transition: all 0.3s;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 :deep(.ant-input-affix-wrapper:hover) {
   background: rgba(255, 255, 255, 0.98);
   border-color: #ff4db3;
   box-shadow: 0 2px 8px rgba(246, 51, 154, 0.15);
+  transform: translateY(-2px);
 }
 
 :deep(.ant-input-affix-wrapper:focus),
@@ -200,6 +243,7 @@ const handleLogin = async () => {
   background: #ffffff;
   border-color: #f6339a;
   box-shadow: 0 0 0 3px rgba(246, 51, 154, 0.15);
+  transform: translateY(-2px);
 }
 
 :deep(.ant-input) {
@@ -224,8 +268,25 @@ const handleLogin = async () => {
   background: linear-gradient(135deg, #f6339a 0%, #ff4db3 100%);
   border: none;
   box-shadow: 0 4px 12px rgba(246, 51, 154, 0.4);
-  transition: all 0.3s;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   margin-top: 4px;
+  position: relative;
+  overflow: hidden;
+}
+
+:deep(.ant-btn-primary::before) {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+  transition: left 0.5s;
+}
+
+:deep(.ant-btn-primary:hover:not(:disabled)::before) {
+  left: 100%;
 }
 
 :deep(.ant-btn-primary:hover:not(:disabled)) {
